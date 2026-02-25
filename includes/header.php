@@ -30,7 +30,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="<?php echo SITE_URL; ?>">
-                <img src="<?php echo IMG_PATH; ?>/logo.jpeg" alt="TecnoFutura Academy Logo" height="40" class="me-2">
+                <img src="<?php echo IMG_PATH; ?>/TecnoFutura_Academy-logo.png" alt="TecnoFutura Academy Logo" height="40" class="me-2">
                 <span class="fw-bold">TecnoFutura Academy</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

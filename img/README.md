@@ -4,11 +4,11 @@ Esta carpeta contiene todas las imágenes y recursos gráficos de la landing pag
 
 ## Archivos requeridos:
 
-### 1. logo.jpeg
+### 1. TecnoFutura_Academy-logo.png
 - **Descripción**: Logo principal de TecnoFutura Academy
 - **Dimensiones recomendadas**: 200x200 px o similar (cuadrado)
-- **Formato**: JPEG o PNG
-- **Ubicación**: /img/logo.jpeg
+- **Formato**: PNG
+- **Ubicación**: /img/TecnoFutura_Academy-logo.png
 
 ### 2. favicon.ico (opcional)
 - **Descripción**: Icono que aparece en la pestaña del navegador
@@ -24,7 +24,7 @@ Puedes agregar más imágenes para:
 - etc.
 
 ## Nota Importante:
-El archivo `logo.jpeg` ya está referenciado en el código. Por favor, asegúrate de colocarlo en esta carpeta para que se muestre correctamente en la landing page.
+El archivo `TecnoFutura_Academy-logo.png` ya está referenciado en el código. Por favor, asegúrate de colocarlo en esta carpeta para que se muestre correctamente en la landing page.
 
 Si aún no tienes el logo, puedes:
 1. Crear un logo temporal con cualquier herramienta de diseño

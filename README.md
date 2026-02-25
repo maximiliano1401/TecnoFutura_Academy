@@ -25,7 +25,7 @@ TecnoFutura_Academy/
 │   └── main.js              # JavaScript interactivo
 │
 ├── img/
-│   ├── logo.jpeg            # Logo de la plataforma (agregar)
+│   ├── TecnoFutura_Academy-logo.png  # Logo de la plataforma
 │   └── README.md            # Instrucciones sobre imágenes
 │
 ├── includes/
@@ -87,7 +87,7 @@ TecnoFutura_Academy/
    ```
 
 2. **Agregar el logo**
-   - Coloca tu archivo `logo.jpeg` en la carpeta `/img/`
+   - Coloca tu archivo `TecnoFutura_Academy-logo.png` en la carpeta `/img/`
    - Formato recomendado: 200x200px (cuadrado)
 
 3. **Iniciar el servidor**
@@ -166,7 +166,7 @@ Desarrollado con ❤️ por el equipo de TecnoFutura Academy.
 
 ## 📝 Notas Importantes
 
-1. **Logo**: No olvides agregar el archivo `logo.jpeg` en la carpeta `/img/`
+1. **Logo**: El archivo `TecnoFutura_Academy-logo.png` debe estar en la carpeta `/img/`
 2. **Configuración**: Revisa y actualiza `/includes/config.php` con tu información
 3. **Testing**: Prueba la landing page en diferentes dispositivos y navegadores
 4. **Email**: El formulario de contacto actualmente solo simula el envío. Requiere configuración de backend para enviar emails reales.
@@ -174,8 +174,8 @@ Desarrollado con ❤️ por el equipo de TecnoFutura Academy.
 ## 🐛 Solución de Problemas
 
 ### El logo no se muestra
-- Verifica que el archivo exista en `/img/logo.jpeg`
-- Confirma que el nombre del archivo sea exactamente `logo.jpeg`
+- Verifica que el archivo exista en `/img/TecnoFutura_Academy-logo.png`
+- Confirma que el nombre del archivo sea exactamente `TecnoFutura_Academy-logo.png`
 
 ### Los estilos no se cargan
 - Verifica la ruta en `config.php`
