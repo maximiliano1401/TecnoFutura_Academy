@@ -1,94 +1,66 @@
-    <!-- Footer -->
-    <footer class="bg-dark text-white pt-5 pb-3">
-        <div class="container">
-            <div class="row">
-                <!-- Información de la empresa -->
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <h5 class="text-warning mb-3">TecnoFutura Academy</h5>
-                    <p class="text-light-50">
-                        Plataforma especializada en la enseñanza de Arduino, electrónica y programación de bajo nivel.
-                        Aprende teoría y práctica con proyectos reales.
-                    </p>
-                    <div class="social-links mt-3">
-                        <a href="<?php echo FACEBOOK_URL; ?>" class="text-white me-3" target="_blank">
-                            <i class="bi bi-facebook fs-4"></i>
-                        </a>
-                        <a href="<?php echo TWITTER_URL; ?>" class="text-white me-3" target="_blank">
-                            <i class="bi bi-twitter fs-4"></i>
-                        </a>
-                        <a href="<?php echo INSTAGRAM_URL; ?>" class="text-white me-3" target="_blank">
-                            <i class="bi bi-instagram fs-4"></i>
-                        </a>
-                        <a href="<?php echo LINKEDIN_URL; ?>" class="text-white" target="_blank">
-                            <i class="bi bi-linkedin fs-4"></i>
-                        </a>
-                    </div>
-                </div>
 
-                <!-- Enlaces rápidos -->
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h5 class="text-warning mb-3">Enlaces</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#inicio" class="text-white text-decoration-none">Inicio</a></li>
-                        <li class="mb-2"><a href="#nosotros" class="text-white text-decoration-none">Nosotros</a></li>
-                        <li class="mb-2"><a href="#cursos" class="text-white text-decoration-none">Cursos</a></li>
-                        <li class="mb-2"><a href="#paquetes" class="text-white text-decoration-none">Paquetes</a></li>
-                        <li class="mb-2"><a href="<?php echo LMS_URL; ?>" class="text-white text-decoration-none">LMS</a></li>
-                    </ul>
-                </div>
-
-                <!-- Cursos populares -->
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <h5 class="text-warning mb-3">Cursos Populares</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#cursos" class="text-white text-decoration-none">Introducción a Arduino</a></li>
-                        <li class="mb-2"><a href="#cursos" class="text-white text-decoration-none">Arduino Desde Cero</a></li>
-                        <li class="mb-2"><a href="#cursos" class="text-white text-decoration-none">Sistemas Embebidos</a></li>
-                        <li class="mb-2"><a href="#cursos" class="text-white text-decoration-none">Lenguaje Ensamblador</a></li>
-                    </ul>
-                </div>
-
-                <!-- Contacto -->
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <h5 class="text-warning mb-3">Contacto</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-3">
-                            <i class="bi bi-envelope-fill me-2"></i>
-                            <a href="mailto:<?php echo CONTACT_EMAIL; ?>" class="text-white text-decoration-none">
-                                <?php echo CONTACT_EMAIL; ?>
-                            </a>
-                        </li>
-                        <li class="mb-3">
-                            <i class="bi bi-telephone-fill me-2"></i>
-                            <span><?php echo CONTACT_PHONE; ?></span>
-                        </li>
-                        <li class="mb-3">
-                            <i class="bi bi-geo-alt-fill me-2"></i>
-                            <span>Ciudad de México, México</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <hr class="bg-secondary my-4">
-
-            <!-- Copyright -->
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0">&copy; <?php echo date('Y'); ?> TecnoFutura Academy. Todos los derechos reservados.</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <a href="#" class="text-white text-decoration-none me-3">Términos y Condiciones</a>
-                    <a href="#" class="text-white text-decoration-none">Política de Privacidad</a>
-                </div>
-            </div>
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand">
+          <div class="brand-icon" style="width:36px;height:36px;background:var(--grad-primary);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-microchip" style="color:#fff"></i></div>
+          <span class="brand-name">TecnoFutura</span>
         </div>
-    </footer>
+        <p>Plataforma especializada en Lenguaje Ensamblador, Arduino y sistemas embebidos. Aprende desde cero con proyectos prácticos reales.</p>
+        <div class="footer-social" style="margin-top:1.25rem">
+          <a href="<?= FACEBOOK_URL ?>" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="<?= TWITTER_URL ?>" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="<?= INSTAGRAM_URL ?>" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="<?= LINKEDIN_URL ?>" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://github.com" aria-label="GitHub"><i class="fab fa-github"></i></a>
+        </div>
+      </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom JS -->
-    <script src="<?php echo JS_PATH; ?>/main.js"></script>
+      <div class="footer-col">
+        <h4>Plataforma</h4>
+        <ul>
+          <li><a href="<?= SITE_URL ?>/cursos">Todos los Cursos</a></li>
+          <li><a href="<?= SITE_URL ?>/#precios">Planes y Precios</a></li>
+          <li><a href="<?= SITE_URL ?>/#nosotros">Sobre Nosotros</a></li>
+          <li><a href="<?= SITE_URL ?>/certificados">Certificaciones</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Categorías</h4>
+        <ul>
+          <li><a href="<?= SITE_URL ?>/cursos?nivel=Básico">Cursos Básicos</a></li>
+          <li><a href="<?= SITE_URL ?>/cursos?nivel=Intermedio">Intermedio</a></li>
+          <li><a href="<?= SITE_URL ?>/cursos?nivel=Avanzado">Avanzado</a></li>
+          <li><a href="<?= SITE_URL ?>/cursos?gratis=1">Cursos Gratis</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Soporte</h4>
+        <ul>
+          <li><a href="mailto:<?= CONTACT_EMAIL ?>">Contacto</a></li>
+          <li><a href="<?= SITE_URL ?>/faq">Preguntas Frecuentes</a></li>
+          <li><a href="<?= SITE_URL ?>/terminos">Términos y Condiciones</a></li>
+          <li><a href="<?= SITE_URL ?>/privacidad">Privacidad</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; <?= date('Y') ?> TecnoFutura Academy. Todos los derechos reservados. Hecho con <i class="fas fa-heart" style="color:var(--danger)"></i> en México.</p>
+      <p style="font-size:.75rem;color:var(--text-muted)"><i class="fas fa-shield-alt" style="color:var(--success)"></i> Pago 100% Seguro &nbsp;|&nbsp; <i class="fas fa-certificate" style="color:var(--warning)"></i> Certificados Verificables</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to Top -->
+<button id="back-to-top" aria-label="Volver arriba"><i class="fas fa-arrow-up"></i></button>
+
+<!-- Main JS -->
+<script src="<?= SITE_URL ?>/js/main.js"></script>
+<?php if (isset($extra_js)) echo $extra_js; ?>
 </body>
 </html>

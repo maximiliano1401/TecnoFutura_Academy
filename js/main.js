@@ -1,386 +1,282 @@
-/**
- * TecnoFutura Academy - JavaScript Principal
- * Funcionalidades interactivas de la landing page
- */
 
-// Esperar a que el DOM esté completamente cargado
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // ========== Navbar Scroll Effect ==========
-    initNavbarScroll();
-    
-    // ========== Smooth Scroll ==========
-    initSmoothScroll();
-    
-    // ========== Scroll Top Button ==========
-    initScrollTopButton();
-    
-    // ========== Form Validation ==========
-    initContactForm();
-    
-    // ========== Animations on Scroll ==========
-    initScrollAnimations();
-    
-    // ========== Active Nav Link ==========
-    initActiveNavLink();
-    
+/* TecnoFutura Academy - Main JavaScript */
+'use strict';
+
+// ── Navbar scroll effect ──────────────────────────────────
+const navbar = document.getElementById('mainNavbar');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 20) navbar?.classList.add('scrolled');
+  else navbar?.classList.remove('scrolled');
+}, { passive: true });
+
+// ── Mobile nav toggle ─────────────────────────────────────
+const mobileToggle = document.getElementById('mobileToggle');
+const mobileNav    = document.getElementById('mobileNav');
+mobileToggle?.addEventListener('click', () => {
+  mobileNav.classList.toggle('show');
+  mobileToggle.innerHTML = mobileNav.classList.contains('show')
+    ? '<i class="fas fa-times"></i>'
+    : '<i class="fas fa-bars"></i>';
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#mobileToggle') && !e.target.closest('#mobileNav')) {
+    mobileNav?.classList.remove('show');
+    if (mobileToggle) mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+  }
 });
 
-/**
- * Efecto de transparencia del navbar al hacer scroll
- */
-function initNavbarScroll() {
-    const navbar = document.querySelector('.navbar');
-    
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 50) {
-            navbar.style.background = 'rgba(13, 110, 253, 0.95)';
-            navbar.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.1)';
-        } else {
-            navbar.style.background = 'rgba(13, 110, 253, 1)';
-            navbar.style.boxShadow = 'none';
-        }
-    });
+// ── User dropdown ─────────────────────────────────────────
+const userMenuBtn  = document.getElementById('userMenuBtn');
+const userDropdown = document.getElementById('userDropdown');
+userMenuBtn?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  userDropdown.classList.toggle('show');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.navbar-user-menu')) {
+    userDropdown?.classList.remove('show');
+  }
+});
+
+// ── Toast notifications ───────────────────────────────────
+function showToast(message, type = 'info', duration = 4000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const icons = { success: 'fa-check-circle', danger: 'fa-exclamation-circle', info: 'fa-info-circle', warning: 'fa-exclamation-triangle' };
+  const colors = { success: 'var(--success)', danger: 'var(--danger)', info: 'var(--info)', warning: 'var(--warning)' };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<i class="fas ${icons[type]||icons.info}" style="color:${colors[type]||colors.info};flex-shrink:0"></i><span style="flex:1">${message}</span><button onclick="this.closest('.toast').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0;font-size:.8rem"><i class="fas fa-times"></i></button>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => { requestAnimationFrame(() => toast.classList.add('show')); });
+  if (duration > 0) setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, duration);
+  return toast;
 }
 
-/**
- * Smooth scroll para todos los enlaces ancla
- */
-function initSmoothScroll() {
-    const navLinks = document.querySelectorAll('a[href^="#"]');
-    
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            
-            // Verificar si el href es válido
-            if (href === '#' || href === '') return;
-            
-            const target = document.querySelector(href);
-            
-            if (target) {
-                e.preventDefault();
-                
-                const navbarHeight = document.querySelector('.navbar').offsetHeight;
-                const targetPosition = target.offsetTop - navbarHeight;
-                
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
-                
-                // Cerrar el menú móvil si está abierto
-                const navbarCollapse = document.querySelector('.navbar-collapse');
-                if (navbarCollapse.classList.contains('show')) {
-                    const bsCollapse = new bootstrap.Collapse(navbarCollapse);
-                    bsCollapse.hide();
-                }
-            }
-        });
-    });
+// ── Back to top ───────────────────────────────────────────
+const btt = document.getElementById('back-to-top');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 400) btt?.classList.add('show');
+  else btt?.classList.remove('show');
+}, { passive: true });
+btt?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+// ── Animated counters ─────────────────────────────────────
+function animateCounter(el) {
+  const target = parseInt(el.dataset.target, 10);
+  const duration = 1800;
+  const start = performance.now();
+  const update = (now) => {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(eased * target).toLocaleString('es-MX') + (el.dataset.suffix || '');
+    if (progress < 1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { animateCounter(e.target); counterObserver.unobserve(e.target); } });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-counter]').forEach(el => counterObserver.observe(el));
+
+// ── Curriculum accordion ──────────────────────────────────
+document.querySelectorAll('.curriculum-module-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const lessons = header.nextElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+    lessons?.classList.toggle('show');
+    if (icon) icon.style.transform = lessons.classList.contains('show') ? 'rotate(180deg)' : '';
+  });
+});
+
+// ── Tabs ──────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    const group  = btn.closest('[data-tab-group]') || btn.parentElement.parentElement;
+    group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    group.querySelectorAll('.tab-content').forEach(c => c.classList.add('d-none'));
+    btn.classList.add('active');
+    group.querySelector(`#${target}`)?.classList.remove('d-none');
+  });
+});
+
+// ── Form validation helpers ───────────────────────────────
+function showFieldError(input, msg) {
+  clearFieldError(input);
+  input.classList.add('is-invalid');
+  const err = document.createElement('div');
+  err.className = 'form-error';
+  err.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>${msg}</span>`;
+  input.insertAdjacentElement('afterend', err);
+}
+function clearFieldError(input) {
+  input.classList.remove('is-invalid');
+  input.nextElementSibling?.classList.contains('form-error') && input.nextElementSibling.remove();
 }
 
-/**
- * Botón de volver arriba
- */
-function initScrollTopButton() {
-    const scrollTopBtn = document.getElementById('scrollTopBtn');
-    
-    if (!scrollTopBtn) return;
-    
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 300) {
-            scrollTopBtn.classList.add('show');
-        } else {
-            scrollTopBtn.classList.remove('show');
-        }
-    });
-    
-    scrollTopBtn.addEventListener('click', function() {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-}
+// ── Password toggle ───────────────────────────────────────
+document.querySelectorAll('.toggle-btn[data-target]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const inp = document.getElementById(btn.dataset.target);
+    if (!inp) return;
+    const isPass = inp.type === 'password';
+    inp.type = isPass ? 'text' : 'password';
+    btn.innerHTML = isPass ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+  });
+});
 
-/**
- * Validación y envío del formulario de contacto
- */
-function initContactForm() {
-    const contactForm = document.getElementById('contactForm');
-    
-    if (!contactForm) return;
-    
-    contactForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Validar formulario
-        if (!contactForm.checkValidity()) {
-            e.stopPropagation();
-            contactForm.classList.add('was-validated');
-            return;
-        }
-        
-        // Obtener datos del formulario
-        const formData = new FormData(contactForm);
-        const data = Object.fromEntries(formData);
-        
-        // Simular envío (aquí puedes agregar AJAX para enviar al servidor)
-        const submitBtn = contactForm.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        
-        // Mostrar estado de carga
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="loading me-2"></span> Enviando...';
-        
-        // Simular delay de envío
-        setTimeout(function() {
-            // Mostrar mensaje de éxito
-            showAlert('success', '¡Mensaje enviado exitosamente! Te contactaremos pronto.');
-            
-            // Resetear formulario
-            contactForm.reset();
-            contactForm.classList.remove('was-validated');
-            
-            // Restaurar botón
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-            
-            // Log de datos (en producción, aquí enviarías al servidor)
-            console.log('Datos del formulario:', data);
-        }, 2000);
-    });
-}
+// ── Payment method selector ───────────────────────────────
+document.querySelectorAll('.payment-icon').forEach(icon => {
+  icon.addEventListener('click', () => {
+    icon.closest('.payment-icons')?.querySelectorAll('.payment-icon').forEach(i => i.classList.remove('active'));
+    icon.classList.add('active');
+    const method = icon.dataset.method;
+    document.querySelectorAll('.payment-section').forEach(s => s.classList.add('d-none'));
+    document.getElementById(`pay-${method}`)?.classList.remove('d-none');
+  });
+});
 
-/**
- * Mostrar alertas personalizadas
- */
-function showAlert(type, message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-5`;
-    alertDiv.style.zIndex = '9999';
-    alertDiv.style.minWidth = '300px';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(alertDiv);
-    
-    // Auto-eliminar después de 5 segundos
-    setTimeout(function() {
-        alertDiv.remove();
-    }, 5000);
-}
+// ── Card number formatting ─────────────────────────────────
+const cardInput = document.getElementById('cardNumber');
+cardInput?.addEventListener('input', (e) => {
+  let v = e.target.value.replace(/\D/g, '').substring(0, 16);
+  e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+});
 
-/**
- * Animaciones al hacer scroll (Intersection Observer)
- */
-function initScrollAnimations() {
-    const animatedElements = document.querySelectorAll('.course-card, .pricing-card, .feature-card');
-    
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '0';
-                entry.target.style.transform = 'translateY(30px)';
-                
-                setTimeout(() => {
-                    entry.target.style.transition = 'all 0.6s ease';
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }, 100);
-                
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-    
-    animatedElements.forEach(element => {
-        observer.observe(element);
-    });
-}
+// ── Expiry formatting ─────────────────────────────────────
+const expiryInput = document.getElementById('cardExpiry');
+expiryInput?.addEventListener('input', (e) => {
+  let v = e.target.value.replace(/\D/g, '').substring(0, 4);
+  if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2);
+  e.target.value = v;
+});
 
-/**
- * Resaltar enlace activo del navbar según la sección visible
- */
-function initActiveNavLink() {
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.navbar-nav .nav-link[href^="#"]');
-    
-    window.addEventListener('scroll', function() {
-        let current = '';
-        const scrollPosition = window.scrollY + 100;
-        
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
-            
-            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                current = section.getAttribute('id');
-            }
-        });
-        
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            const href = link.getAttribute('href').substring(1);
-            
-            if (href === current) {
-                link.classList.add('active');
-            }
-        });
-    });
-}
+// ── Progress circle ───────────────────────────────────────
+document.querySelectorAll('.progress-circle').forEach(el => {
+  const pct = parseFloat(el.dataset.pct || 0);
+  const r = 30; const c = 2 * Math.PI * r;
+  el.innerHTML = `<svg width="80" height="80" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/>
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="url(#grad)" stroke-width="6"
+      stroke-dasharray="${c}" stroke-dashoffset="${c - (pct / 100) * c}"
+      stroke-linecap="round" transform="rotate(-90 40 40)"/>
+    <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient></defs>
+    <text x="40" y="45" text-anchor="middle" fill="var(--text-primary)" font-size="13" font-weight="700">${Math.round(pct)}%</text>
+  </svg>`;
+});
 
-/**
- * Counter Animation (para estadísticas)
- */
-function animateCounter(element, target, duration = 2000) {
-    let start = 0;
-    const increment = target / (duration / 16);
-    
-    const timer = setInterval(() => {
-        start += increment;
-        
-        if (start >= target) {
-            element.textContent = target + '+';
-            clearInterval(timer);
-        } else {
-            element.textContent = Math.floor(start) + '+';
-        }
-    }, 16);
-}
+// ── Smooth scroll for anchor links ───────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+});
 
-/**
- * Lazy loading de imágenes
- */
-function initLazyLoading() {
-    const images = document.querySelectorAll('img[data-src]');
-    
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
-                imageObserver.unobserve(img);
-            }
-        });
-    });
-    
-    images.forEach(img => imageObserver.observe(img));
-}
-
-/**
- * Efecto parallax simple en hero section
- */
-function initParallax() {
-    window.addEventListener('scroll', function() {
-        const scrolled = window.scrollY;
-        const parallaxElements = document.querySelectorAll('.hero-image');
-        
-        parallaxElements.forEach(element => {
-            const speed = 0.5;
-            element.style.transform = `translateY(${scrolled * speed}px)`;
-        });
-    });
-}
-
-/**
- * Preloader (opcional)
- */
-function initPreloader() {
-    window.addEventListener('load', function() {
-        const preloader = document.getElementById('preloader');
-        if (preloader) {
-            preloader.style.opacity = '0';
-            setTimeout(() => {
-                preloader.style.display = 'none';
-            }, 500);
-        }
-    });
-}
-
-/**
- * Modal para vista previa de cursos (opcional)
- */
-function initCourseModals() {
-    const courseCards = document.querySelectorAll('.course-card');
-    
-    courseCards.forEach(card => {
-        card.addEventListener('click', function(e) {
-            if (!e.target.closest('a')) {
-                const courseName = this.querySelector('h4').textContent;
-                console.log('Curso seleccionado:', courseName);
-                // Aquí puedes abrir un modal con más información
-            }
-        });
-    });
-}
-
-/**
- * Copiar al portapapeles (para compartir)
- */
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        showAlert('success', '¡Enlace copiado al portapapeles!');
-    }).catch(function(err) {
-        console.error('Error al copiar:', err);
-    });
-}
-
-/**
- * Detectar modo oscuro del sistema (opcional)
- */
-function detectDarkMode() {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    if (prefersDark.matches) {
-        console.log('Modo oscuro detectado');
-        // Aplicar estilos de modo oscuro si es necesario
+// ── Lazy load images ──────────────────────────────────────
+const imgObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const img = e.target;
+      if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+      imgObserver.unobserve(img);
     }
-    
-    prefersDark.addEventListener('change', (e) => {
-        if (e.matches) {
-            console.log('Cambiado a modo oscuro');
-        } else {
-            console.log('Cambiado a modo claro');
+  });
+});
+document.querySelectorAll('img[data-src]').forEach(img => imgObserver.observe(img));
+
+// ── Copy to clipboard ─────────────────────────────────────
+document.querySelectorAll('[data-copy]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    navigator.clipboard.writeText(btn.dataset.copy).then(() => showToast('Copiado al portapapeles', 'success', 2000));
+  });
+});
+
+// ── Delete confirmation ───────────────────────────────────
+document.querySelectorAll('[data-confirm]').forEach(el => {
+  el.addEventListener('click', (e) => {
+    if (!confirm(el.dataset.confirm || '¿Estás seguro?')) e.preventDefault();
+  });
+});
+
+// ── Fade in on scroll ─────────────────────────────────────
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('fade-in-done'); fadeObserver.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+
+// ── Course search ─────────────────────────────────────────
+const searchInput = document.getElementById('courseSearch');
+searchInput?.addEventListener('input', debounce(() => {
+  const q = searchInput.value.toLowerCase().trim();
+  document.querySelectorAll('.course-card').forEach(card => {
+    const title = card.querySelector('.course-card-title')?.textContent.toLowerCase() || '';
+    card.style.display = (!q || title.includes(q)) ? '' : 'none';
+  });
+}, 300));
+
+function debounce(fn, delay) {
+  let t; return function(...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), delay); };
+}
+
+// ── Lesson completion marking ─────────────────────────────
+document.querySelectorAll('.mark-complete-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const lessonId = btn.dataset.lesson;
+    const inscId   = btn.dataset.inscripcion;
+    try {
+      btn.disabled = true;
+      const res = await fetch('/lms/ajax/marcar_completado.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_material: lessonId, id_inscripcion: inscId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Lección marcada como completada', 'success');
+        btn.textContent = 'Completado';
+        btn.classList.remove('btn-primary'); btn.classList.add('btn-success');
+        document.querySelector(`.lesson-item[data-lesson="${lessonId}"]`)?.classList.add('completed');
+        const pctEl = document.getElementById('courseProgress');
+        if (pctEl && data.progreso !== undefined) {
+          pctEl.style.width = data.progreso + '%';
+          const pctText = document.getElementById('progressText');
+          if (pctText) pctText.textContent = Math.round(data.progreso) + '%';
         }
-    });
-}
+      }
+    } catch { showToast('Error al actualizar progreso', 'danger'); }
+    finally { btn.disabled = false; }
+  });
+});
 
-/**
- * Prevenir submit múltiple de formularios
- */
-function preventMultipleSubmit() {
-    const forms = document.querySelectorAll('form');
-    
-    forms.forEach(form => {
-        let submitted = false;
-        
-        form.addEventListener('submit', function(e) {
-            if (submitted) {
-                e.preventDefault();
-                return false;
-            }
-            
-            submitted = true;
-            
-            setTimeout(() => {
-                submitted = false;
-            }, 3000);
-        });
-    });
+// ── Modal helpers ─────────────────────────────────────────
+function openModal(id) {
+  const m = document.getElementById(id);
+  m?.classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
-
-/**
- * Console log personalizado
- */
-console.log('%c¡Bienvenido a TecnoFutura Academy! 🚀', 'color: #0d6efd; font-size: 20px; font-weight: bold;');
-console.log('%c¿Interesado en el código? Visita nuestros cursos de programación!', 'color: #ffc107; font-size: 14px;');
+function closeModal(id) {
+  const m = document.getElementById(id);
+  m?.classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.modal-close, [data-close-modal]').forEach(el => {
+  el.addEventListener('click', () => {
+    const modal = el.closest('.modal-backdrop');
+    if (modal) { modal.classList.remove('show'); document.body.style.overflow = ''; }
+  });
+});
+document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) { backdrop.classList.remove('show'); document.body.style.overflow = ''; }
+  });
+});
+document.querySelectorAll('[data-open-modal]').forEach(btn => {
+  btn.addEventListener('click', () => openModal(btn.dataset.openModal));
+});

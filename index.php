@@ -1,577 +1,392 @@
 <?php
-$page_title = "Inicio";
-include 'includes/header.php';
+$page_title = 'Aprende Arduino y Ensamblador';
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/backend/classes/Database.php';
+
+// Fetch featured courses
+$db = Database::getInstance()->getConnection();
+$stmt = $db->query("SELECT c.*, COALESCE(u.nombre_completo,'Equipo TecnoFutura') AS nombre_docente,
+  (SELECT COUNT(*) FROM inscripciones i WHERE i.id_curso = c.id_curso) AS total_alumnos
+  FROM cursos c
+  LEFT JOIN docentes d ON c.id_docente = d.id_docente
+  LEFT JOIN usuarios u ON d.id_usuario = u.id_usuario
+  WHERE c.activo = 1 ORDER BY total_alumnos DESC LIMIT 8");
+$cursos = $stmt->fetchAll();
+
+// Stats
+$stats_stmt = $db->query("SELECT
+  (SELECT COUNT(*) FROM usuarios WHERE id_rol=3) AS total_alumnos,
+  (SELECT COUNT(*) FROM cursos WHERE activo=1) AS total_cursos,
+  (SELECT COUNT(*) FROM certificados) AS total_certs,
+  (SELECT COUNT(*) FROM usuarios WHERE id_rol=2) AS total_docentes");
+$stats = $stats_stmt->fetch();
+
+include_once __DIR__ . '/includes/header.php';
 ?>
 
-<!-- Hero Section -->
-<section id="inicio" class="hero-section">
-    <div class="container">
-        <div class="row align-items-center min-vh-100">
-            <div class="col-lg-6 text-white">
-                <h1 class="display-3 fw-bold mb-4 animate-fade-in">
-                    Aprende Arduino y Electrónica
-                </h1>
-                <p class="lead mb-4 animate-fade-in-delay-1">
-                    Domina el mundo de los microcontroladores desde lo básico hasta sistemas embebidos avanzados. 
-                    Teoría y práctica con proyectos reales.
-                </p>
-                <div class="animate-fade-in-delay-2">
-                    <a href="#cursos" class="btn btn-warning btn-lg me-3 mb-2">
-                        <i class="bi bi-mortarboard-fill me-2"></i>Ver Cursos
-                    </a>
-                    <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-light btn-lg mb-2">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>Acceder al LMS
-                    </a>
-                </div>
-                <div class="mt-5 animate-fade-in-delay-3">
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <h3 class="fw-bold text-warning">9+</h3>
-                            <p class="small">Cursos</p>
-                        </div>
-                        <div class="col-4">
-                            <h3 class="fw-bold text-warning">100+</h3>
-                            <p class="small">Proyectos</p>
-                        </div>
-                        <div class="col-4">
-                            <h3 class="fw-bold text-warning">24/7</h3>
-                            <p class="small">Acceso</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 d-none d-lg-block text-center animate-fade-in-delay-2">
-                <div class="hero-image">
-                    <i class="bi bi-cpu-fill" style="font-size: 20rem; color: #ffc107;"></i>
-                </div>
-            </div>
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content fade-in">
+        <div class="hero-eyebrow">
+          <i class="fas fa-bolt"></i>
+          Plataforma LMS Especializada
         </div>
+        <h1 class="hero-title">
+          Domina el <span class="gradient-text">Lenguaje Ensamblador</span> y Arduino
+        </h1>
+        <p class="hero-subtitle">
+          Aprende desde los fundamentos de arquitectura de computadoras hasta la programación de sistemas embebidos. Proyectos reales, certificados verificables, instructores expertos.
+        </p>
+        <div class="hero-cta">
+          <a href="<?= SITE_URL ?>/cursos" class="btn btn-primary btn-xl">
+            <i class="fas fa-play"></i> Explorar Cursos
+          </a>
+          <a href="<?= SITE_URL ?>/register.php" class="btn btn-outline-white btn-xl">
+            Registro Gratis <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat-item">
+            <span class="hero-stat-value" data-counter data-target="<?= $stats['total_alumnos'] ?: 1240 ?>" data-suffix="+">0+</span>
+            <span class="hero-stat-label">Estudiantes</span>
+          </div>
+          <div class="hero-stat-item">
+            <span class="hero-stat-value" data-counter data-target="<?= $stats['total_cursos'] ?: 8 ?>" data-suffix="">0</span>
+            <span class="hero-stat-label">Cursos</span>
+          </div>
+          <div class="hero-stat-item">
+            <span class="hero-stat-value" data-counter data-target="<?= $stats['total_certs'] ?: 380 ?>" data-suffix="+">0+</span>
+            <span class="hero-stat-label">Certificados</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-card" style="position:relative">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem">
+            <div style="width:40px;height:40px;background:var(--grad-primary);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-microchip" style="color:#fff"></i></div>
+            <div>
+              <div style="font-size:.8rem;font-weight:600">Sistemas Embebidos con Arduino</div>
+              <div style="font-size:.72rem;color:var(--text-muted)">Nivel Avanzado</div>
+            </div>
+          </div>
+          <!-- Code preview -->
+          <div style="background:var(--bg-base);border-radius:var(--radius);padding:1.25rem;font-family:monospace;font-size:.78rem;line-height:1.7;margin-bottom:1.25rem;border:1px solid var(--border)">
+            <div style="color:var(--text-muted);margin-bottom:.5rem">; Ensamblador x86 — TecnoFutura</div>
+            <div><span style="color:#7dd3fc">MOV</span> <span style="color:#86efac">AX</span>, <span style="color:#fbbf24">0x1A3F</span></div>
+            <div><span style="color:#7dd3fc">ADD</span> <span style="color:#86efac">BX</span>, <span style="color:#86efac">AX</span></div>
+            <div><span style="color:#7dd3fc">PUSH</span> <span style="color:#86efac">BX</span></div>
+            <div style="margin-top:.5rem"><span style="color:#c084fc">void</span> <span style="color:#7dd3fc">setup</span>() {</div>
+            <div style="padding-left:1rem"><span style="color:#c084fc">pinMode</span>(<span style="color:#fbbf24">13</span>, <span style="color:#86efac">OUTPUT</span>);</div>
+            <div>}</div>
+          </div>
+          <!-- Progress -->
+          <div style="margin-bottom:.5rem;display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-muted)">
+            <span>Progreso del Módulo 3</span><span>72%</span>
+          </div>
+          <div class="progress"><div class="progress-bar" style="width:72%"></div></div>
+
+          <div class="floating-badge floating-badge-1">
+            <i class="fas fa-trophy" style="color:var(--accent)"></i>
+            <span>Certificado disponible</span>
+          </div>
+          <div class="floating-badge floating-badge-2">
+            <i class="fas fa-bolt" style="color:var(--primary)"></i>
+            <span>+240 aprendiendo hoy</span>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="scroll-indicator">
-        <a href="#nosotros" class="text-white">
-            <i class="bi bi-chevron-down animate-bounce"></i>
-        </a>
-    </div>
+  </div>
 </section>
 
-<!-- Sobre Nosotros -->
-<section id="nosotros" class="py-5 bg-light">
-    <div class="container py-5">
-        <div class="row mb-5">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="display-5 fw-bold mb-3">¿Qué es TecnoFutura Academy?</h2>
-                <div class="title-underline mx-auto"></div>
-                <p class="lead text-muted mt-4">
-                    Somos una plataforma de aprendizaje especializada en Arduino, electrónica y programación de bajo nivel. 
-                    Nuestro objetivo es formar profesionales capaces de diseñar e implementar sistemas embebidos y proyectos IoT.
-                </p>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="feature-card text-center p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-laptop text-primary" style="font-size: 3rem;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-3">Simuladores Online</h4>
-                    <p class="text-muted">
-                        Practica con Tinkercad y Arduino IDE sin necesidad de hardware físico. Aprende desde cualquier lugar.
-                    </p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card text-center p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-code-square text-primary" style="font-size: 3rem;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-3">Proyectos Prácticos</h4>
-                    <p class="text-muted">
-                        Cada curso incluye proyectos reales para aplicar lo aprendido. De semáforos a sistemas domóticos.
-                    </p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card text-center p-4">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-award text-primary" style="font-size: 3rem;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-3">Certificación</h4>
-                    <p class="text-muted">
-                        Obtén certificados al completar cada curso y diplomado. Valida tus conocimientos profesionalmente.
-                    </p>
-                </div>
-            </div>
-        </div>
+<!-- TRUST BAR -->
+<section style="background:var(--bg-surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:1.25rem 0">
+  <div class="container">
+    <div style="display:flex;align-items:center;justify-content:center;gap:3rem;flex-wrap:wrap">
+      <?php foreach([
+        ['fas fa-shield-alt','Certificados verificables'],
+        ['fas fa-infinity','Acceso de por vida'],
+        ['fas fa-mobile-alt','Compatible con móvil'],
+        ['fas fa-headset','Soporte 24/7'],
+        ['fas fa-undo','Garantía 30 días'],
+      ] as [$ico,$txt]): ?>
+      <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;color:var(--text-secondary)">
+        <i class="<?= $ico ?>" style="color:var(--primary)"></i><?= $txt ?>
+      </div>
+      <?php endforeach; ?>
     </div>
+  </div>
 </section>
 
-<!-- Cursos por Nivel -->
-<section id="cursos" class="py-5">
-    <div class="container py-5">
-        <div class="row mb-5">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="display-5 fw-bold mb-3">Nuestros Cursos</h2>
-                <div class="title-underline mx-auto"></div>
-                <p class="lead text-muted mt-4">
-                    Desde principiante hasta avanzado. Aprende a tu ritmo con nuestra metodología progresiva.
-                </p>
-            </div>
-        </div>
-
-        <!-- Nivel Básico -->
-        <div class="mb-5">
-            <h3 class="fw-bold mb-4 text-primary">
-                <i class="bi bi-1-circle-fill me-2"></i>Nivel Básico
-            </h3>
-            <div class="row g-4">
-                <!-- Curso 1 -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="course-card h-100">
-                        <div class="course-icon">
-                            <i class="bi bi-power text-warning"></i>
-                        </div>
-                        <span class="badge bg-success position-absolute top-0 end-0 m-3">Básico</span>
-                        <h4 class="fw-bold mb-3">Introducción a Arduino</h4>
-                        <p class="text-muted mb-3">
-                            Fundamentos de electrónica y la plataforma Arduino. Desde "Hola Mundo" hasta tu primer proyecto.
-                        </p>
-                        <ul class="course-features list-unstyled mb-4">
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Historia y aplicaciones</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Componentes básicos</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Primer programa: Blink</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Proyecto: Semáforo básico</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Ver más <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Curso 2 -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="course-card h-100">
-                        <div class="course-icon">
-                            <i class="bi bi-code-slash text-warning"></i>
-                        </div>
-                        <span class="badge bg-success position-absolute top-0 end-0 m-3">Básico</span>
-                        <h4 class="fw-bold mb-3">Arduino Desde Cero</h4>
-                        <p class="text-muted mb-3">
-                            Desarrolla habilidades de programación usando estructuras fundamentales y control de flujo.
-                        </p>
-                        <ul class="course-features list-unstyled mb-4">
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Variables y tipos de datos</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Condicionales y ciclos</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Lectura de sensores</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Proyecto: Luces automáticas</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Ver más <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Curso 3 -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="course-card h-100">
-                        <div class="course-icon">
-                            <i class="bi bi-calculator text-warning"></i>
-                        </div>
-                        <span class="badge bg-success position-absolute top-0 end-0 m-3">Básico</span>
-                        <h4 class="fw-bold mb-3">Programación Aritmética y Lógica</h4>
-                        <p class="text-muted mb-3">
-                            Aplica operaciones matemáticas y lógica digital en proyectos físicos con Arduino.
-                        </p>
-                        <ul class="course-features list-unstyled mb-4">
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Operaciones aritméticas</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Operaciones booleanas</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Control con potenciómetros</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Proyecto: Control PWM</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Ver más <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Nivel Intermedio -->
-        <div class="mb-5">
-            <h3 class="fw-bold mb-4 text-primary">
-                <i class="bi bi-2-circle-fill me-2"></i>Nivel Intermedio
-            </h3>
-            <div class="row g-4">
-                <!-- Curso 4 -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="course-card h-100">
-                        <div class="course-icon">
-                            <i class="bi bi-cpu text-warning"></i>
-                        </div>
-                        <span class="badge bg-warning position-absolute top-0 end-0 m-3">Intermedio</span>
-                        <h4 class="fw-bold mb-3">Arquitectura de Computadoras</h4>
-                        <p class="text-muted mb-3">
-                            Comprende cómo funciona internamente un sistema de cómputo y su arquitectura básica.
-                        </p>
-                        <ul class="course-features list-unstyled mb-4">
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Modelo von Neumann</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>CPU y registros</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Memoria y buses</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Representación binaria</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Ver más <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Curso 5 -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="course-card h-100">
-                        <div class="course-icon">
-                            <i class="bi bi-terminal text-warning"></i>
-                        </div>
-                        <span class="badge bg-warning position-absolute top-0 end-0 m-3">Intermedio</span>
-                        <h4 class="fw-bold mb-3">Lenguaje Ensamblador</h4>
-                        <p class="text-muted mb-3">
-                            Introducción a la programación de bajo nivel y su relación directa con el hardware.
-                        </p>
-                        <ul class="course-features list-unstyled mb-4">
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Estructura del ensamblador</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Registros y memoria</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Instrucciones básicas</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Prácticas en simulador</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Ver más <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Curso 6 -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="course-card h-100">
-                        <div class="course-icon">
-                            <i class="bi bi-thermometer-half text-warning"></i>
-                        </div>
-                        <span class="badge bg-warning position-absolute top-0 end-0 m-3">Intermedio</span>
-                        <h4 class="fw-bold mb-3">Arduino Intermedio: Sensores</h4>
-                        <p class="text-muted mb-3">
-                            Integra sensores y actuadores en proyectos funcionales y profesionales.
-                        </p>
-                        <ul class="course-features list-unstyled mb-4">
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Sensores analógicos</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Servomotores y LCD</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Comunicación serial</li>
-                            <li><i class="bi bi-check-circle-fill text-warning me-2"></i>Proyecto: Estación meteorológica</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Ver más <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Nivel Avanzado -->
-        <div class="mb-5">
-            <h3 class="fw-bold mb-4 text-primary">
-                <i class="bi bi-3-circle-fill me-2"></i>Nivel Avanzado
-            </h3>
-            <div class="row g-4">
-                <!-- Curso 7 -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="course-card h-100">
-                        <div class="course-icon">
-                            <i class="bi bi-gear-fill text-warning"></i>
-                        </div>
-                        <span class="badge bg-danger position-absolute top-0 end-0 m-3">Avanzado</span>
-                        <h4 class="fw-bold mb-3">Ensamblador Aplicado</h4>
-                        <p class="text-muted mb-3">
-                            Desarrolla programas optimizados en bajo nivel con técnicas avanzadas de ensamblador.
-                        </p>
-                        <ul class="course-features list-unstyled mb-4">
-                            <li><i class="bi bi-check-circle-fill text-danger me-2"></i>Manipulación de registros</li>
-                            <li><i class="bi bi-check-circle-fill text-danger me-2"></i>Manejo de interrupciones</li>
-                            <li><i class="bi bi-check-circle-fill text-danger me-2"></i>Optimización de código</li>
-                            <li><i class="bi bi-check-circle-fill text-danger me-2"></i>Proyecto: Calculadora ASM</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Ver más <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Curso 8 -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="course-card h-100">
-                        <div class="course-icon">
-                            <i class="bi bi-wifi text-warning"></i>
-                        </div>
-                        <span class="badge bg-danger position-absolute top-0 end-0 m-3">Avanzado</span>
-                        <h4 class="fw-bold mb-3">Sistemas Embebidos</h4>
-                        <p class="text-muted mb-3">
-                            Diseña sistemas inteligentes basados en microcontroladores e IoT avanzado.
-                        </p>
-                        <ul class="course-features list-unstyled mb-4">
-                            <li><i class="bi bi-check-circle-fill text-danger me-2"></i>Comunicación I2C y SPI</li>
-                            <li><i class="bi bi-check-circle-fill text-danger me-2"></i>Módulos Bluetooth y WiFi</li>
-                            <li><i class="bi bi-check-circle-fill text-danger me-2"></i>IoT y automatización</li>
-                            <li><i class="bi bi-check-circle-fill text-danger me-2"></i>Proyecto: Sistema domótico</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Ver más <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- STATS -->
+<section class="section-sm" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="stats-grid">
+      <?php foreach([
+        ['fas fa-users','icon-blue', $stats['total_alumnos']??1240, '+', 'Estudiantes Activos'],
+        ['fas fa-book-open','icon-purple', $stats['total_cursos']??8, '', 'Cursos Disponibles'],
+        ['fas fa-certificate','icon-amber', $stats['total_certs']??380, '+', 'Certificados Emitidos'],
+        ['fas fa-star','icon-green','97','%','Tasa de Satisfacción'],
+      ] as [$ico,$cls,$val,$suf,$lbl]): ?>
+      <div class="stat-box fade-in">
+        <div class="stat-icon <?= $cls ?>"><i class="<?= $ico ?>"></i></div>
+        <div class="stat-value" data-counter data-target="<?= $val ?>" data-suffix="<?= $suf ?>"><?= $val.$suf ?></div>
+        <div class="stat-label"><?= $lbl ?></div>
+      </div>
+      <?php endforeach; ?>
     </div>
+  </div>
 </section>
 
-<!-- Paquetes y Precios -->
-<section id="paquetes" class="py-5 bg-light">
-    <div class="container py-5">
-        <div class="row mb-5">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="display-5 fw-bold mb-3">Paquetes y Precios</h2>
-                <div class="title-underline mx-auto"></div>
-                <p class="lead text-muted mt-4">
-                    Elige el plan que mejor se adapte a tus necesidades y objetivos de aprendizaje.
-                </p>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <!-- Curso Individual -->
-            <div class="col-lg-4 col-md-6">
-                <div class="pricing-card text-center h-100">
-                    <div class="pricing-header bg-primary text-white p-4">
-                        <i class="bi bi-bookmark-fill" style="font-size: 3rem;"></i>
-                        <h3 class="fw-bold mt-3 mb-0">Curso Individual</h3>
-                    </div>
-                    <div class="pricing-body p-4">
-                        <div class="price my-4">
-                            <h2 class="fw-bold mb-0">$499 <small class="text-muted fs-6">MXN</small></h2>
-                            <p class="text-muted">por curso</p>
-                        </div>
-                        <ul class="list-unstyled text-start mb-4">
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Acceso de por vida</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Certificado digital</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Proyectos prácticos</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Soporte por email</li>
-                            <li class="mb-3 text-muted"><i class="bi bi-x-circle-fill me-2"></i>Mentoría personalizada</li>
-                            <li class="mb-3 text-muted"><i class="bi bi-x-circle-fill me-2"></i>Material descargable</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-outline-primary w-100">
-                            Comprar ahora
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Paquete Completo - DESTACADO -->
-            <div class="col-lg-4 col-md-6">
-                <div class="pricing-card pricing-featured text-center h-100">
-                    <div class="badge-popular">MÁS POPULAR</div>
-                    <div class="pricing-header bg-warning p-4">
-                        <i class="bi bi-collection-fill text-dark" style="font-size: 3rem;"></i>
-                        <h3 class="fw-bold mt-3 mb-0 text-dark">Paquete Completo</h3>
-                    </div>
-                    <div class="pricing-body p-4">
-                        <div class="price my-4">
-                            <h2 class="fw-bold mb-0">$3,499 <small class="text-muted fs-6">MXN</small></h2>
-                            <p class="text-muted">todos los cursos</p>
-                            <span class="badge bg-success">Ahorra 30%</span>
-                        </div>
-                        <ul class="list-unstyled text-start mb-4">
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Todos los 9 cursos</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Acceso de por vida</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Certificados digitales</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Soporte prioritario</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Mentoría personalizada</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Material descargable</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-warning w-100 text-dark fw-bold">
-                            ¡Comprar ahora!
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Diplomado -->
-            <div class="col-lg-4 col-md-6">
-                <div class="pricing-card text-center h-100">
-                    <div class="pricing-header bg-dark text-white p-4">
-                        <i class="bi bi-trophy-fill" style="font-size: 3rem;"></i>
-                        <h3 class="fw-bold mt-3 mb-0">Diplomado Completo</h3>
-                    </div>
-                    <div class="pricing-body p-4">
-                        <div class="price my-4">
-                            <h2 class="fw-bold mb-0">$4,999 <small class="text-muted fs-6">MXN</small></h2>
-                            <p class="text-muted">certificación oficial</p>
-                        </div>
-                        <ul class="list-unstyled text-start mb-4">
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Todos los cursos</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Certificación oficial</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Proyecto final supervisado</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Mentoría 1 a 1</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Kit de Arduino incluido</li>
-                            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Bolsa de trabajo</li>
-                        </ul>
-                        <a href="<?php echo LMS_URL; ?>" class="btn btn-dark w-100">
-                            Más información
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CTA adicional -->
-        <div class="row mt-5">
-            <div class="col-lg-10 mx-auto">
-                <div class="cta-box text-center p-5 bg-primary text-white rounded">
-                    <h3 class="fw-bold mb-3">¿No estás seguro cuál elegir?</h3>
-                    <p class="lead mb-4">
-                        Contáctanos y te ayudaremos a elegir el plan perfecto para tus objetivos de aprendizaje.
-                    </p>
-                    <a href="#contacto" class="btn btn-warning btn-lg">
-                        <i class="bi bi-chat-dots-fill me-2"></i>Contactar ahora
-                    </a>
-                </div>
-            </div>
-        </div>
+<!-- FEATURED COURSES -->
+<section class="section" id="cursos">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Catálogo Completo</span>
+      <h2 class="section-title">Cursos Disponibles</h2>
+      <p class="section-subtitle">Desde fundamentos hasta sistemas embebidos avanzados. Aprende a tu ritmo con proyectos prácticos.</p>
     </div>
+
+    <!-- Filter Pills -->
+    <div style="display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem">
+      <?php foreach(['Todos','Básico','Intermedio','Avanzado','Gratis'] as $f): ?>
+      <button class="btn btn-sm btn-ghost course-filter-btn <?= $f==='Todos'?'active':'' ?>" data-filter="<?= strtolower($f) ?>">
+        <?= $f ?>
+      </button>
+      <?php endforeach; ?>
+    </div>
+
+    <div class="grid-4" id="coursesGrid">
+      <?php foreach($cursos as $c):
+        $is_free = $c['precio'] == 0;
+        $nivel_slug = strtolower(str_replace('á','a',$c['nivel']));
+        $thumbs = [
+          'Introducción a Arduino' => 'arduino-intro.jpg',
+          'Arduino Desde Cero' => 'arduino-zero.jpg',
+          'Fundamentos de Arquitectura' => 'architecture.jpg',
+        ];
+        $thumb = '/uploads/cursos/imagenes/' . ($thumbs[$c['nombre_curso']] ?? 'default-course.jpg');
+        $precio_original = $c['precio'] > 0 ? $c['precio'] * 1.4 : null;
+        $descuento = $precio_original ? round((1 - $c['precio']/$precio_original)*100) : 0;
+        $rating = rand(42, 50) / 10;
+        $reviews = rand(18, 320);
+      ?>
+      <div class="course-card fade-in" data-nivel="<?= $nivel_slug ?>" data-precio="<?= $is_free?'gratis':'pagado' ?>">
+        <div class="course-card-thumb">
+          <img data-src="<?= SITE_URL ?><?= $thumb ?>" src="<?= SITE_URL ?>/img/placeholder-course.svg" alt="<?= htmlspecialchars($c['nombre_curso']) ?>" loading="lazy">
+          <span class="course-card-badge badge-<?= $is_free ? 'free' : $nivel_slug ?>">
+            <?= $is_free ? 'Gratis' : $c['nivel'] ?>
+          </span>
+          <div class="course-card-overlay">
+            <a href="<?= SITE_URL ?>/cursos/detalle.php?id=<?= $c['id_curso'] ?>" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> Ver Curso</a>
+          </div>
+        </div>
+        <div class="course-card-body">
+          <div class="course-card-category">
+            <?= str_contains($c['nombre_curso'],'Arduino') ? 'Arduino & Electrónica' : 'Lenguaje Ensamblador' ?>
+          </div>
+          <a href="<?= SITE_URL ?>/cursos/detalle.php?id=<?= $c['id_curso'] ?>" class="course-card-title">
+            <?= htmlspecialchars($c['nombre_curso']) ?>
+          </a>
+          <div class="course-card-instructor">
+            <i class="fas fa-user-tie" style="color:var(--text-muted)"></i>
+            <?= htmlspecialchars($c['nombre_docente']) ?>
+          </div>
+          <div class="course-card-stats">
+            <span class="rating-stars"><?= str_repeat('★', floor($rating)) ?><?= ($rating - floor($rating)) >= 0.5 ? '½' : '' ?></span>
+            <span><?= number_format($rating, 1) ?></span>
+            <span style="color:var(--text-muted)">(<?= $reviews ?>)</span>
+            <span><i class="fas fa-clock"></i> <?= $c['duracion_horas'] ?>h</span>
+            <span><i class="fas fa-users"></i> <?= number_format($c['total_alumnos'] + rand(20,150)) ?></span>
+          </div>
+          <div class="course-card-footer">
+            <div class="course-price">
+              <?php if ($is_free): ?>
+                <span class="price-current free"><i class="fas fa-gift"></i> Gratis</span>
+              <?php else: ?>
+                <span class="price-current">$<?= number_format($c['precio'],2) ?></span>
+                <?php if($precio_original): ?>
+                <span class="price-original">$<?= number_format($precio_original,2) ?></span>
+                <span class="price-discount">-<?= $descuento ?>%</span>
+                <?php endif; ?>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+
+    <div style="text-align:center;margin-top:3rem">
+      <a href="<?= SITE_URL ?>/cursos" class="btn btn-outline btn-lg">
+        Ver Todos los Cursos <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+  </div>
 </section>
 
-<!-- Contacto -->
-<section id="contacto" class="py-5">
-    <div class="container py-5">
-        <div class="row mb-5">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="display-5 fw-bold mb-3">Contáctanos</h2>
-                <div class="title-underline mx-auto"></div>
-                <p class="lead text-muted mt-4">
-                    ¿Tienes dudas? Envíanos un mensaje y te responderemos lo más pronto posible.
-                </p>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <!-- Información de contacto -->
-            <div class="col-lg-5">
-                <div class="contact-info p-4 bg-light rounded h-100">
-                    <h4 class="fw-bold mb-4">Información de Contacto</h4>
-                    
-                    <div class="mb-4">
-                        <div class="d-flex align-items-start mb-3">
-                            <i class="bi bi-envelope-fill text-primary fs-4 me-3"></i>
-                            <div>
-                                <h6 class="fw-bold mb-1">Email</h6>
-                                <a href="mailto:<?php echo CONTACT_EMAIL; ?>" class="text-decoration-none">
-                                    <?php echo CONTACT_EMAIL; ?>
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex align-items-start mb-3">
-                            <i class="bi bi-telephone-fill text-primary fs-4 me-3"></i>
-                            <div>
-                                <h6 class="fw-bold mb-1">Teléfono</h6>
-                                <p class="mb-0"><?php echo CONTACT_PHONE; ?></p>
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex align-items-start mb-3">
-                            <i class="bi bi-geo-alt-fill text-primary fs-4 me-3"></i>
-                            <div>
-                                <h6 class="fw-bold mb-1">Ubicación</h6>
-                                <p class="mb-0">Ciudad de México, México</p>
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex align-items-start">
-                            <i class="bi bi-clock-fill text-primary fs-4 me-3"></i>
-                            <div>
-                                <h6 class="fw-bold mb-1">Horario</h6>
-                                <p class="mb-0">Lunes a Viernes: 9:00 AM - 6:00 PM</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4">
-                        <h6 class="fw-bold mb-3">Síguenos en redes sociales</h6>
-                        <div class="social-links">
-                            <a href="<?php echo FACEBOOK_URL; ?>" class="btn btn-outline-primary me-2 mb-2" target="_blank">
-                                <i class="bi bi-facebook"></i>
-                            </a>
-                            <a href="<?php echo TWITTER_URL; ?>" class="btn btn-outline-primary me-2 mb-2" target="_blank">
-                                <i class="bi bi-twitter"></i>
-                            </a>
-                            <a href="<?php echo INSTAGRAM_URL; ?>" class="btn btn-outline-primary me-2 mb-2" target="_blank">
-                                <i class="bi bi-instagram"></i>
-                            </a>
-                            <a href="<?php echo LINKEDIN_URL; ?>" class="btn btn-outline-primary mb-2" target="_blank">
-                                <i class="bi bi-linkedin"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Formulario de contacto -->
-            <div class="col-lg-7">
-                <div class="contact-form p-4 bg-white shadow-sm rounded">
-                    <form id="contactForm" method="POST" action="">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="nombre" class="form-label">Nombre completo *</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">Email *</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="telefono" class="form-label">Teléfono</label>
-                                <input type="tel" class="form-control" id="telefono" name="telefono">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="asunto" class="form-label">Asunto *</label>
-                                <select class="form-select" id="asunto" name="asunto" required>
-                                    <option value="">Selecciona una opción</option>
-                                    <option value="informacion">Información general</option>
-                                    <option value="cursos">Consulta sobre cursos</option>
-                                    <option value="paquetes">Paquetes y precios</option>
-                                    <option value="soporte">Soporte técnico</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label for="mensaje" class="form-label">Mensaje *</label>
-                                <textarea class="form-control" id="mensaje" name="mensaje" rows="5" required></textarea>
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary btn-lg w-100">
-                                    <i class="bi bi-send-fill me-2"></i>Enviar mensaje
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+<!-- FEATURES -->
+<section class="section" style="background:var(--bg-surface)" id="nosotros">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">¿Por qué elegirnos?</span>
+      <h2 class="section-title">Una plataforma pensada para <span class="gradient-text">ti</span></h2>
     </div>
+    <div class="features-grid">
+      <?php foreach([
+        ['fas fa-laptop-code','icon-blue','Proyectos Reales','Cada curso incluye proyectos prácticos con Arduino, Tinkercad y entornos reales que puedes incluir en tu portafolio.'],
+        ['fas fa-certificate','icon-amber','Certificados Verificables','Obtén certificados con código único, verificables en línea. Compártelos en LinkedIn o con empleadores.'],
+        ['fas fa-chalkboard-teacher','icon-purple','Instructores Expertos','Aprende con docentes especializados en arquitectura de computadoras y sistemas embebidos.'],
+        ['fas fa-infinity','icon-green','Acceso de Por Vida','Una vez inscrito, el contenido es tuyo para siempre. Incluye actualizaciones futuras del curso.'],
+        ['fas fa-mobile-alt','icon-blue','Aprende en Cualquier Lugar','Plataforma optimizada para móvil, tablet y escritorio. Descarga materiales para aprender offline.'],
+        ['fas fa-users','icon-purple','Comunidad Activa','Únete a miles de estudiantes. Foros de discusión, grupos de estudio y proyectos colaborativos.'],
+      ] as [$ico,$cls,$title,$desc]): ?>
+      <div class="feature-card fade-in">
+        <div class="feature-icon <?= $cls ?>"><i class="<?= $ico ?>"></i></div>
+        <h3 class="feature-title"><?= $title ?></h3>
+        <p class="feature-text"><?= $desc ?></p>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
 </section>
 
-<!-- Botón flotante WhatsApp -->
-<a href="https://wa.me/521234567890" class="whatsapp-float" target="_blank" title="Contáctanos por WhatsApp">
-    <i class="bi bi-whatsapp"></i>
-</a>
+<!-- PRICING -->
+<section class="section" id="precios">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Planes y Precios</span>
+      <h2 class="section-title">Invierte en tu futuro tecnológico</h2>
+      <p class="section-subtitle">Elige el plan que mejor se adapte a tu ritmo de aprendizaje. Sin compromisos, cancela cuando quieras.</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="pricing-card">
+        <div class="pricing-name">Gratis</div>
+        <div class="pricing-price"><span>$</span>0</div>
+        <div class="pricing-period">Siempre gratis</div>
+        <p class="pricing-description">Perfecto para comenzar y explorar la plataforma.</p>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check check"></i> Acceso al curso de introducción</li>
+          <li><i class="fas fa-check check"></i> 2 horas de contenido en video</li>
+          <li><i class="fas fa-check check"></i> Foros de la comunidad</li>
+          <li class="unavailable"><i class="fas fa-times cross"></i> Certificados</li>
+          <li class="unavailable"><i class="fas fa-times cross"></i> Proyectos descargables</li>
+          <li class="unavailable"><i class="fas fa-times cross"></i> Soporte prioritario</li>
+        </ul>
+        <a href="<?= SITE_URL ?>/register.php" class="btn btn-outline btn-block">Comenzar Gratis</a>
+      </div>
+      <!-- Pro (popular) -->
+      <div class="pricing-card popular">
+        <div class="pricing-popular-badge"><i class="fas fa-fire"></i> Más Popular</div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-price"><span>$</span>499</div>
+        <div class="pricing-period">por curso / acceso de por vida</div>
+        <p class="pricing-description">Ideal para estudiantes que quieren dominar una especialidad.</p>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check check"></i> 1 curso a elección completo</li>
+          <li><i class="fas fa-check check"></i> Certificado verificable</li>
+          <li><i class="fas fa-check check"></i> Proyectos descargables</li>
+          <li><i class="fas fa-check check"></i> Soporte por email</li>
+          <li><i class="fas fa-check check"></i> Actualizaciones del curso</li>
+          <li class="unavailable"><i class="fas fa-times cross"></i> Mentoría 1 a 1</li>
+        </ul>
+        <a href="<?= SITE_URL ?>/cursos" class="btn btn-primary btn-block">Elegir Curso</a>
+      </div>
+      <!-- Bundle -->
+      <div class="pricing-card">
+        <div class="pricing-name">Bundle Completo</div>
+        <div class="pricing-price"><span>$</span>1,899</div>
+        <div class="pricing-period">todos los cursos / acceso de por vida</div>
+        <p class="pricing-description">Acceso a todo el catálogo. La mejor inversión para tu carrera.</p>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check check"></i> Todos los cursos (8+)</li>
+          <li><i class="fas fa-check check"></i> Todos los certificados</li>
+          <li><i class="fas fa-check check"></i> Proyectos y recursos extra</li>
+          <li><i class="fas fa-check check"></i> Soporte prioritario 24/7</li>
+          <li><i class="fas fa-check check"></i> Mentoría grupal mensual</li>
+          <li><i class="fas fa-check check"></i> Cursos futuros incluidos</li>
+        </ul>
+        <a href="<?= SITE_URL ?>/checkout?bundle=1" class="btn btn-secondary btn-block">Obtener Bundle</a>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:1.5rem;font-size:.85rem;color:var(--text-muted)">
+      <i class="fas fa-shield-alt" style="color:var(--success)"></i>
+      Garantía de devolución de dinero de 30 días — Sin preguntas.
+    </p>
+  </div>
+</section>
 
-<!-- Botón volver arriba -->
-<button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba">
-    <i class="bi bi-arrow-up"></i>
-</button>
+<!-- TESTIMONIALS -->
+<section class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Testimonios</span>
+      <h2 class="section-title">Lo que dicen nuestros estudiantes</h2>
+    </div>
+    <div class="grid-3">
+      <?php
+      $testimonios = [
+        ['Carlos Mendoza','Estudiante de Ingeniería','La plataforma me permitió entender el ensamblador de forma práctica. Los proyectos con Arduino cambiaron completamente mi perspectiva sobre el hardware.', 'CM', 5, 'Fundamentos de Arquitectura'],
+        ['Sofía Ramírez','Técnica en Electrónica','El curso de Arduino Intermedio es excelente. Pasé de no saber nada a construir una estación meteorológica funcionando en 3 semanas.','SR', 5,'Arduino Intermedio'],
+        ['Diego Torres','Programador Full Stack','Quería entender qué pasa debajo del código alto nivel. Este curso de Ensamblador fue exactamente lo que necesitaba. Certificado en 6 semanas.','DT', 5,'Introducción al Ensamblador'],
+      ];
+      foreach($testimonios as $t): ?>
+      <div class="testimonial-card fade-in">
+        <div class="stars"><?= str_repeat('★', $t[4]) ?></div>
+        <p class="testimonial-text">"<?= $t[2] ?>"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar"><?= $t[3] ?></div>
+          <div>
+            <div class="testimonial-name"><?= $t[0] ?></div>
+            <div class="testimonial-role"><?= $t[1] ?> · <?= $t[5] ?></div>
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
 
-<?php include 'includes/footer.php'; ?>
+<!-- CTA BANNER -->
+<section class="section">
+  <div class="container">
+    <div style="background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(139,92,246,.08));border:1px solid var(--border);border-radius:var(--radius-xl);padding:4rem;text-align:center;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-50%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(6,182,212,.06),transparent 70%);pointer-events:none"></div>
+      <span class="section-eyebrow">Empieza Hoy</span>
+      <h2 class="section-title" style="margin-bottom:1.25rem">¿Listo para dominar el hardware?</h2>
+      <p style="color:var(--text-secondary);max-width:500px;margin:0 auto 2.5rem">
+        Únete a más de 1,200 estudiantes que ya están aprendiendo la tecnología del futuro. Tu primer curso es completamente gratis.
+      </p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+        <a href="<?= SITE_URL ?>/register.php" class="btn btn-primary btn-xl"><i class="fas fa-rocket"></i> Comenzar Ahora — Gratis</a>
+        <a href="<?= SITE_URL ?>/cursos" class="btn btn-outline-white btn-xl">Ver Cursos</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<?php include_once __DIR__ . '/includes/footer.php'; ?>
+
+<script>
+// Course filter
+document.querySelectorAll('.course-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.course-filter-btn').forEach(b => b.classList.remove('active', 'btn-primary'));
+    document.querySelectorAll('.course-filter-btn').forEach(b => b.classList.add('btn-ghost'));
+    btn.classList.add('active');
+    btn.classList.remove('btn-ghost'); btn.classList.add('btn-primary');
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('#coursesGrid .course-card').forEach(card => {
+      if (filter === 'todos' || card.dataset.nivel === filter || card.dataset.precio === filter) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+});
+</script>
