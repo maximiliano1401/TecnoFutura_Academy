@@ -60,7 +60,7 @@
 <button id="back-to-top" aria-label="Volver arriba"><i class="fas fa-arrow-up"></i></button>
 
 <!-- Main JS -->
-<script src="<?= SITE_URL ?>/js/main.js"></script>
+<script src="<?= JS_PATH ?>/main.js"></script>
 <?php if (isset($extra_js)) echo $extra_js; ?>
 </body>
 </html>

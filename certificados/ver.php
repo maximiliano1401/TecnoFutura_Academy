@@ -16,7 +16,7 @@ $cert     = $codigo ? $cert_obj->porCodigo($codigo) : null;
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="<?= SITE_URL ?>/css/styles.css">
+<link rel="stylesheet" href="<?= CSS_PATH ?>/styles.css">
 <?php if ($print): ?>
 <style>
   body { background: #fff !important; }
@@ -155,7 +155,7 @@ $cert     = $codigo ? $cert_obj->porCodigo($codigo) : null;
 <?php endif; ?>
 </div>
 
-<script src="<?= SITE_URL ?>/js/main.js"></script>
+<script src="<?= JS_PATH ?>/main.js"></script>
 <?php if ($print): ?>
 <script>window.addEventListener('load', () => window.print());</script>
 <?php endif; ?>

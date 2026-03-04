@@ -140,7 +140,7 @@ include_once __DIR__ . '/../includes/header.php';
         <div class="course-card fade-in" data-price="<?= $c['precio'] ?>" data-level="<?= $c['nivel'] ?>">
           <div class="course-card-thumb">
             <img data-src="<?= SITE_URL ?>/uploads/cursos/imagenes/<?= urlencode($c['imagen_portada'] ?? 'default.jpg') ?>"
-                 src="<?= SITE_URL ?>/img/placeholder-course.svg"
+                 src="<?= IMG_PATH ?>/placeholder-course.svg"
                  alt="<?= htmlspecialchars($c['nombre_curso']) ?>" loading="lazy">
             <span class="course-card-badge badge-<?= $is_free ? 'free' : $nivel_slug ?>">
               <?= $is_free ? 'Gratis' : $c['nivel'] ?>

@@ -176,7 +176,7 @@ include_once __DIR__ . '/includes/header.php';
       ?>
       <div class="course-card fade-in" data-nivel="<?= $nivel_slug ?>" data-precio="<?= $is_free?'gratis':'pagado' ?>">
         <div class="course-card-thumb">
-          <img data-src="<?= SITE_URL ?><?= $thumb ?>" src="<?= SITE_URL ?>/img/placeholder-course.svg" alt="<?= htmlspecialchars($c['nombre_curso']) ?>" loading="lazy">
+          <img data-src="<?= SITE_URL ?><?= $thumb ?>" src="<?= IMG_PATH ?>/placeholder-course.svg" alt="<?= htmlspecialchars($c['nombre_curso']) ?>" loading="lazy">
           <span class="course-card-badge badge-<?= $is_free ? 'free' : $nivel_slug ?>">
             <?= $is_free ? 'Gratis' : $c['nivel'] ?>
           </span>

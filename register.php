@@ -13,7 +13,7 @@ if (Usuario::estaAutenticado()) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="<?= SITE_URL ?>/css/styles.css">
+<link rel="stylesheet" href="<?= CSS_PATH ?>/styles.css">
 </head>
 <body>
 <div id="toast-container"></div>
@@ -234,7 +234,7 @@ if (Usuario::estaAutenticado()) {
   </div>
 </div>
 
-<script src="<?= SITE_URL ?>/js/main.js"></script>
+<script src="<?= JS_PATH ?>/main.js"></script>
 <script>
 // Password strength
 document.querySelectorAll('input[type=password][name=contrasena]').forEach(inp => {
