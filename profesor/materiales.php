@@ -2,10 +2,12 @@
 $page_title = 'Gestión de Materiales';
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../backend/auth/middleware.php';
+require_once __DIR__ . '/../backend/upload_handler.php';
 requiereRol(['PROFESOR']);
 
 $db         = Database::getInstance()->getConnection();
 $id_docente = $_SESSION['info_adicional']['id_docente'] ?? 0;
+$uploader   = new UploadHandler();
 
 // Get docente's courses
 $cursos_stmt = $db->prepare("SELECT id_curso, nombre_curso FROM cursos WHERE id_docente = :d AND activo = 1 ORDER BY nombre_curso");
@@ -22,29 +24,81 @@ if ($selected_curso) {
 
 // Handle add
 $msg = '';
+$error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
+    
     if ($action === 'add_material') {
-        $stmt = $db->prepare("INSERT INTO materiales_curso (id_curso, titulo, descripcion, tipo_material, url_material, orden, duracion_minutos)
-            VALUES (:c,:t,:d,:tipo,:url,:o,:dur)");
-        $ok = $stmt->execute([
-            ':c'   => intval($_POST['id_curso']),
-            ':t'   => htmlspecialchars($_POST['titulo']),
-            ':d'   => htmlspecialchars($_POST['descripcion'] ?? ''),
-            ':tipo' => htmlspecialchars($_POST['tipo_material']),
-            ':url' => htmlspecialchars($_POST['url_material'] ?? ''),
-            ':o'   => intval($_POST['orden'] ?? count($materiales)+1),
-            ':dur' => intval($_POST['duracion_minutos'] ?? 0),
-        ]);
-        $msg = $ok ? 'Material agregado exitosamente.' : 'Error al agregar material.';
-        if ($ok) {
-            $m = $db->prepare("SELECT * FROM materiales_curso WHERE id_curso = :c ORDER BY orden ASC");
-            $m->execute([':c' => $selected_curso]);
-            $materiales = $m->fetchAll();
+        $id_curso = intval($_POST['id_curso']);
+        $tipo_material = htmlspecialchars($_POST['tipo_material']);
+        $url_material = '';
+        $url_archivo = '';
+        
+        // Determinar origen del material
+        $origen = $_POST['origen'] ?? 'url'; // 'url' o 'archivo'
+        
+        if ($origen === 'archivo' && isset($_FILES['archivo_material']) && $_FILES['archivo_material']['error'] !== UPLOAD_ERR_NO_FILE) {
+            // Subir archivo
+            $tipo_upload = in_array($tipo_material, ['video']) ? 'video' : 'documento';
+            $result = $uploader->uploadMaterial($_FILES['archivo_material'], $id_curso, $tipo_upload);
+            
+            if ($result['success']) {
+                $url_archivo = $result['path'];
+                $url_material = ''; // Limpiar URL si se subió archivo
+            } else {
+                $error = $result['message'];
+            }
+        } elseif ($origen === 'url') {
+            // Usar URL externa
+            $url_material = htmlspecialchars($_POST['url_material'] ?? '');
         }
-    } elseif ($action === 'delete_material') {
-        $db->prepare("DELETE FROM materiales_curso WHERE id_material = :i")->execute([':i' => intval($_POST['id_material'])]);
+        
+        // Si no hubo error, insertar en BD
+        if (empty($error)) {
+            $stmt = $db->prepare("INSERT INTO materiales_curso 
+                (id_curso, titulo, descripcion, tipo_material, url_archivo, url_material, orden, duracion_minutos)
+                VALUES (:c,:t,:d,:tipo,:arch,:url,:o,:dur)");
+            
+            $ok = $stmt->execute([
+                ':c'    => $id_curso,
+                ':t'    => htmlspecialchars($_POST['titulo']),
+                ':d'    => htmlspecialchars($_POST['descripcion'] ?? ''),
+                ':tipo' => $tipo_material,
+                ':arch' => $url_archivo,
+                ':url'  => $url_material,
+                ':o'    => intval($_POST['orden'] ?? count($materiales)+1),
+                ':dur'  => intval($_POST['duracion_minutos'] ?? 0),
+            ]);
+            
+            if ($ok) {
+                $msg = 'Material agregado exitosamente.';
+                // Recargar materiales
+                $m = $db->prepare("SELECT * FROM materiales_curso WHERE id_curso = :c ORDER BY orden ASC");
+                $m->execute([':c' => $selected_curso]);
+                $materiales = $m->fetchAll();
+            } else {
+                $error = 'Error al agregar material a la base de datos.';
+            }
+        }
+    } 
+    elseif ($action === 'delete_material') {
+        $id_material = intval($_POST['id_material']);
+        
+        // Obtener info del material para eliminar archivo si existe
+        $stmt = $db->prepare("SELECT url_archivo FROM materiales_curso WHERE id_material = :i");
+        $stmt->execute([':i' => $id_material]);
+        $material = $stmt->fetch();
+        
+        // Eliminar archivo físico si existe
+        if ($material && !empty($material['url_archivo'])) {
+            $uploader->deleteFile($material['url_archivo']);
+        }
+        
+        // Eliminar de BD
+        $db->prepare("DELETE FROM materiales_curso WHERE id_material = :i")->execute([':i' => $id_material]);
         $msg = 'Material eliminado.';
+        
+        // Recargar materiales
         $m = $db->prepare("SELECT * FROM materiales_curso WHERE id_curso = :c ORDER BY orden ASC");
         $m->execute([':c' => $selected_curso]);
         $materiales = $m->fetchAll();
@@ -54,22 +108,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include_once __DIR__ . '/../includes/header.php';
 ?>
 <div style="margin-top:var(--navbar-height);display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - var(--navbar-height))">
-<aside class="admin-sidebar">
-  <div class="admin-sidebar-header"><i class="fas fa-chalkboard-teacher"></i><span>Portal Docente</span></div>
-  <nav class="admin-nav">
-    <a href="<?= SITE_URL ?>/profesor" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-    <a href="<?= SITE_URL ?>/profesor/alumnos.php" class="admin-nav-item"><i class="fas fa-users"></i> Mis Alumnos</a>
-    <a href="<?= SITE_URL ?>/profesor/materiales.php" class="admin-nav-item active"><i class="fas fa-film"></i> Materiales</a>
-    <a href="<?= SITE_URL ?>" class="admin-nav-item"><i class="fas fa-globe"></i> Ver Sitio</a>
-    <div style="margin-top:auto;padding:.75rem 0 0;border-top:1px solid var(--border);margin:1.5rem 0 0"><form method="POST" action="<?= SITE_URL ?>/backend/auth/logout.php" style="padding:0 .25rem"><button type="submit" class="admin-nav-item" style="width:100%;background:none;border:none;cursor:pointer;color:var(--danger);text-align:left"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button></form></div>
-  </nav>
-</aside>
+<?php $active_page = 'materiales'; include_once __DIR__ . '/../includes/profesor_sidebar.php'; ?>
 <div class="admin-main">
   <div class="admin-header">
     <div><h1 class="admin-title">Materiales del Curso</h1><p class="admin-subtitle">Administra el contenido de tus cursos.</p></div>
     <a href="#" class="btn btn-primary" data-open-modal="addMatModal"><i class="fas fa-plus"></i> Agregar Lección</a>
   </div>
   <?php if ($msg): ?><div class="alert alert-success"><i class="fas fa-check-circle alert-icon"></i><?= $msg ?></div><?php endif; ?>
+  <?php if ($error): ?><div class="alert alert-danger"><i class="fas fa-exclamation-circle alert-icon"></i><?= $error ?></div><?php endif; ?>
   
   <!-- Course selector -->
   <div style="margin-bottom:1.5rem">
@@ -126,28 +172,30 @@ include_once __DIR__ . '/../includes/header.php';
       <h2 class="modal-title">Agregar Lección</h2>
       <button class="modal-close"><i class="fas fa-times"></i></button>
     </div>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <input type="hidden" name="action" value="add_material">
       <input type="hidden" name="id_curso" value="<?= $selected_curso ?>">
       <input type="hidden" name="id" value="<?= $selected_curso ?>">
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Título de la Lección</label>
+          <label class="form-label">Título de la Lección <span style="color:var(--danger)">*</span></label>
           <input type="text" name="titulo" class="form-control" required>
         </div>
+        
         <div class="form-group">
           <label class="form-label">Descripción</label>
-          <textarea name="descripcion" class="form-control" rows="3"></textarea>
+          <textarea name="descripcion" class="form-control" rows="3" placeholder="Breve descripción del contenido..."></textarea>
         </div>
+        
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
           <div class="form-group">
-            <label class="form-label">Tipo</label>
-            <select name="tipo_material" class="form-control">
+            <label class="form-label">Tipo de Material</label>
+            <select name="tipo_material" id="tipo_material" class="form-control">
               <option value="video">Video</option>
-              <option value="documento">Documento</option>
+              <option value="documento">Documento/PDF</option>
               <option value="texto">Texto/Artículo</option>
-              <option value="ejercicio">Ejercicio</option>
-              <option value="evaluacion">Evaluación</option>
+              <option value="ejercicio">Ejercicio/Práctica</option>
+              <option value="evaluacion">Evaluación/Examen</option>
             </select>
           </div>
           <div class="form-group">
@@ -155,21 +203,102 @@ include_once __DIR__ . '/../includes/header.php';
             <input type="number" name="duracion_minutos" class="form-control" min="0" placeholder="ej: 25">
           </div>
         </div>
+
+        <!-- Origen del material -->
         <div class="form-group">
-          <label class="form-label">URL del Material (video/documento)</label>
-          <input type="text" name="url_material" class="form-control" placeholder="https://youtube.com/... o ruta al archivo">
+          <label class="form-label">Origen del Material</label>
+          <div style="display:flex;gap:1rem;margin-top:.5rem">
+            <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+              <input type="radio" name="origen" value="archivo" checked onchange="toggleOrigenMaterial()">
+              <span>Subir Archivo</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+              <input type="radio" name="origen" value="url" onchange="toggleOrigenMaterial()">
+              <span>URL Externa (YouTube, etc.)</span>
+            </label>
+          </div>
         </div>
+
+        <!-- Upload file -->
+        <div class="form-group" id="upload_section">
+          <label class="form-label">Archivo <span style="color:var(--danger)">*</span></label>
+          <input type="file" name="archivo_material" class="form-control" accept=".pdf,.doc,.docx,.mp4,.avi,.mov,.jpg,.jpeg,.png">
+          <small style="color:var(--text-muted);font-size:.75rem;display:block;margin-top:.25rem">
+            <strong>Documentos:</strong> PDF, DOC, DOCX (max <?= $uploader->getMaxSizeFormatted('documento') ?>)<br>
+            <strong>Videos:</strong> MP4, AVI, MOV (max <?= $uploader->getMaxSizeFormatted('video') ?>)<br>
+            <strong>Imágenes:</strong> JPG, PNG (max <?= $uploader->getMaxSizeFormatted('imagen') ?>)
+          </small>
+        </div>
+
+        <!-- URL externa -->
+        <div class="form-group" id="url_section" style="display:none">
+          <label class="form-label">URL del Material <span style="color:var(--danger)">*</span></label>
+          <input type="text" name="url_material" class="form-control" placeholder="https://youtube.com/watch?v=... o https://ejemplo.com/archivo.pdf">
+          <small style="color:var(--text-muted);font-size:.75rem">Enlace directo a YouTube, Vimeo, Google Drive, etc.</small>
+        </div>
+        
         <div class="form-group">
-          <label class="form-label">Orden</label>
+          <label class="form-label">Orden de Aparición</label>
           <input type="number" name="orden" class="form-control" value="<?= count($materiales)+1 ?>" min="1">
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost modal-close">Cancelar</button>
-        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Lección</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Agregar Lección</button>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+function toggleOrigenMaterial() {
+  const origen = document.querySelector('input[name="origen"]:checked').value;
+  const uploadSection = document.getElementById('upload_section');
+  const urlSection = document.getElementById('url_section');
+  
+  if (origen === 'archivo') {
+    uploadSection.style.display = 'block';
+    urlSection.style.display = 'none';
+    uploadSection.querySelector('input[type="file"]').required = true;
+    urlSection.querySelector('input[type="text"]').required = false;
+  } else {
+    uploadSection.style.display = 'none';
+    urlSection.style.display = 'block';
+    uploadSection.querySelector('input[type="file"]').required = false;
+    urlSection.querySelector('input[type="text"]').required = true;
+  }
+}
+
+// Open modal by data-open-modal attribute
+document.querySelectorAll('[data-open-modal]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const modalId = e.currentTarget.dataset.openModal;
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.add('show');
+    }
+  });
+});
+
+// Close modal handlers
+document.querySelectorAll('.modal-close').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const modal = e.target.closest('.modal-backdrop');
+    if (modal) {
+      modal.classList.remove('show');
+    }
+  });
+});
+
+// Close modal when clicking backdrop
+document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) {
+      backdrop.classList.remove('show');
+    }
+  });
+});
+</script>
 
 <?php include_once __DIR__ . '/../includes/footer.php'; ?>

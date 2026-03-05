@@ -167,8 +167,8 @@ class Curso {
     public function crear(array $datos): array {
         try {
             $stmt = $this->db->prepare("INSERT INTO cursos 
-                (nombre_curso, descripcion, nivel, precio, duracion_horas, id_docente, imagen_portada, activo)
-                VALUES (:n,:d,:niv,:p,:h,:doc,:img,1)");
+                (nombre_curso, descripcion, nivel, precio, duracion_horas, id_docente, activo)
+                VALUES (:n,:d,:niv,:p,:h,:doc,1)");
             $stmt->execute([
                 ':n'   => $datos['nombre_curso'],
                 ':d'   => $datos['descripcion'],
@@ -176,7 +176,6 @@ class Curso {
                 ':p'   => $datos['precio'],
                 ':h'   => $datos['duracion_horas'],
                 ':doc' => $datos['id_docente'] ?? null,
-                ':img' => $datos['imagen_portada'] ?? null,
             ]);
             return ['success' => true, 'id' => $this->db->lastInsertId()];
         } catch (Exception $e) {
@@ -192,5 +191,21 @@ class Curso {
         return $stmt->execute([':n'=>$datos['nombre_curso'], ':d'=>$datos['descripcion'],
             ':niv'=>$datos['nivel'], ':p'=>$datos['precio'], ':h'=>$datos['duracion_horas'],
             ':a'=>$datos['activo']??1, ':id'=>$id]);
+    }
+
+    public function cursosDelProfesor(int $id_docente): array {
+        $stmt = $this->db->prepare("SELECT c.*, 
+            COUNT(DISTINCT i.id_inscripcion) as total_inscritos,
+            COUNT(DISTINCT m.id_material) as total_materiales,
+            COALESCE(SUM(p.monto), 0) as ingresos_totales
+        FROM cursos c
+        LEFT JOIN inscripciones i ON c.id_curso = i.id_curso
+        LEFT JOIN materiales_curso m ON c.id_curso = m.id_curso
+        LEFT JOIN pagos p ON i.id_inscripcion = p.id_inscripcion AND p.estado_pago = 'Pagado'
+        WHERE c.id_docente = :id_docente
+        GROUP BY c.id_curso
+        ORDER BY c.id_curso DESC");
+        $stmt->execute([':id_docente' => $id_docente]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

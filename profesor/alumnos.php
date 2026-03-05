@@ -34,15 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nuevo_estado'])) {
 include_once __DIR__ . '/../includes/header.php';
 ?>
 <div style="margin-top:var(--navbar-height);display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - var(--navbar-height))">
-<aside class="admin-sidebar">
-  <div class="admin-sidebar-header"><i class="fas fa-chalkboard-teacher"></i><span>Portal Docente</span></div>
-  <nav class="admin-nav">
-    <a href="<?= SITE_URL ?>/profesor" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-    <a href="<?= SITE_URL ?>/profesor/alumnos.php" class="admin-nav-item active"><i class="fas fa-users"></i> Mis Alumnos</a>
-    <a href="<?= SITE_URL ?>/profesor/materiales.php" class="admin-nav-item"><i class="fas fa-film"></i> Materiales</a>
-    <a href="<?= SITE_URL ?>" class="admin-nav-item"><i class="fas fa-globe"></i> Ver Sitio</a>
-    <div style="margin-top:auto;padding:.75rem 0 0;border-top:1px solid var(--border);margin:1.5rem 0 0"><form method="POST" action="<?= SITE_URL ?>/backend/auth/logout.php" style="padding:0 .25rem"><button type="submit" class="admin-nav-item" style="width:100%;background:none;border:none;cursor:pointer;color:var(--danger);text-align:left"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button></form></div>
-  </nav>
+<?php $active_page = 'alumnos'; include_once __DIR__ . '/../includes/profesor_sidebar.php'; ?>
 </aside>
 <div class="admin-main">
   <div class="admin-header"><div><h1 class="admin-title">Mis Alumnos</h1><p class="admin-subtitle"><?= count($alumnos) ?> estudiantes inscritos en tus cursos.</p></div></div>
