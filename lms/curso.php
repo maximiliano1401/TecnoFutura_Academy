@@ -8,7 +8,7 @@ require_once __DIR__ . '/../backend/classes/Actividad.php';
 requiereRol(['USUARIO']);
 
 $id_curso  = intval($_GET['id'] ?? 0);
-$id_alumno = $_SESSION['usuario_rol_id'] ?? 0;
+$id_alumno = $_SESSION['info_adicional']['id_alumno'] ?? 0;
 $obj       = new Curso();
 $curso     = $obj->porId($id_curso);
 
@@ -29,10 +29,22 @@ $progreso       = floatval($insc['progreso'] ?? 0);
 // Current lesson
 $id_material = intval($_GET['leccion'] ?? 0);
 $current_lesson = null;
-foreach ($materiales as $m) {
-    if ($m['id_material'] == $id_material) { $current_lesson = $m; break; }
+$current_index = -1;
+foreach ($materiales as $idx => $m) {
+    if ($m['id_material'] == $id_material) { 
+        $current_lesson = $m;
+        $current_index = $idx;
+        break; 
+    }
 }
-if (!$current_lesson && !empty($materiales)) $current_lesson = $materiales[0];
+if (!$current_lesson && !empty($materiales)) {
+    $current_lesson = $materiales[0];
+    $current_index = 0;
+}
+
+// Previous and next lessons
+$prev_lesson = ($current_index > 0) ? $materiales[$current_index - 1] : null;
+$next_lesson = ($current_index >= 0 && $current_index < count($materiales) - 1) ? $materiales[$current_index + 1] : null;
 
 // Progress per lesson
 $completadas = [];
@@ -126,6 +138,80 @@ if ($actividad && !$resultado) {
 
 include_once __DIR__ . '/../includes/header.php';
 ?>
+
+<style>
+.lesson-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .875rem 1.25rem;
+  text-decoration: none;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.lesson-item:hover {
+  background: var(--bg-surface);
+  padding-left: 1.5rem;
+}
+
+.lesson-item.active {
+  background: rgba(var(--primary-rgb), 0.08);
+  border-left: 3px solid var(--primary);
+}
+
+.lesson-item.completed {
+  opacity: 0.85;
+}
+
+.lesson-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.lesson-list.d-none {
+  display: none;
+}
+
+.reading-content {
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+.reading-content p {
+  margin-bottom: 1rem;
+}
+
+.reading-content h1, .reading-content h2, .reading-content h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+/* PDF viewer styles */
+iframe[type="application/pdf"] {
+  border: none;
+}
+
+/* Video container responsive */
+.video-container {
+  background: #000;
+}
+
+/* Animation for success message */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+</style>
 
 <div style="margin-top:var(--navbar-height);display:grid;grid-template-columns:1fr 320px;min-height:calc(100vh - var(--navbar-height))">
 
@@ -262,6 +348,7 @@ include_once __DIR__ . '/../includes/header.php';
         </div>
 
         <?php elseif ($current_lesson['tipo_material'] === 'video' && $current_lesson['url_material']): ?>
+        <!-- Video Player -->
         <div class="video-container" style="width:100%;aspect-ratio:16/9;position:relative">
           <?php if (str_contains($current_lesson['url_material'], 'youtube') || str_contains($current_lesson['url_material'], 'youtu.be')): ?>
           <iframe src="<?= htmlspecialchars($current_lesson['url_material']) ?>" style="width:100%;height:100%;border:none" allowfullscreen></iframe>
@@ -272,17 +359,61 @@ include_once __DIR__ . '/../includes/header.php';
           </video>
           <?php endif; ?>
         </div>
+        
+        <?php elseif ($current_lesson['tipo_material'] === 'documento' && $current_lesson['url_material']): ?>
+        <!-- PDF/Document Viewer -->
+        <?php 
+        $file_url = SITE_URL . '/' . htmlspecialchars($current_lesson['url_material']);
+        $file_ext = strtolower(pathinfo($current_lesson['url_material'], PATHINFO_EXTENSION));
+        ?>
+        
+        <?php if ($file_ext === 'pdf'): ?>
+        <!-- PDF Embedded Viewer -->
+        <div style="width:100%;height:600px;background:#525659;position:relative">
+          <iframe src="<?= $file_url ?>#toolbar=1&navpanes=1&scrollbar=1" 
+                  style="width:100%;height:100%;border:none" 
+                  type="application/pdf">
+          </iframe>
+          <div style="position:absolute;bottom:1rem;right:1rem;display:flex;gap:.5rem">
+            <a href="<?= $file_url ?>" target="_blank" class="btn btn-secondary btn-sm" style="box-shadow:0 4px 8px rgba(0,0,0,0.3)">
+              <i class="fas fa-external-link-alt"></i> Abrir en pestaña nueva
+            </a>
+            <a href="<?= $file_url ?>" download class="btn btn-primary btn-sm" style="box-shadow:0 4px 8px rgba(0,0,0,0.3)">
+              <i class="fas fa-download"></i> Descargar PDF
+            </a>
+          </div>
+        </div>
+        
+        <?php elseif (in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+        <!-- Image Viewer -->
+        <div style="width:100%;height:auto;min-height:400px;background:#000;display:flex;align-items:center;justify-content:center;padding:2rem">
+          <img src="<?= $file_url ?>" alt="<?= htmlspecialchars($current_lesson['titulo']) ?>" 
+               style="max-width:100%;max-height:600px;object-fit:contain;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.3)">
+        </div>
+        
         <?php else: ?>
-        <!-- Non-video lesson -->
+        <!-- Generic Document -->
         <div style="color:#fff;text-align:center;padding:3rem">
-          <i class="fas fa-<?= $current_lesson['tipo_material'] === 'documento' ? 'file-pdf' : 'newspaper' ?>"
-             style="font-size:4rem;color:var(--primary);margin-bottom:1.5rem;display:block"></i>
+          <i class="fas fa-file-alt" style="font-size:4rem;color:var(--primary);margin-bottom:1.5rem;display:block"></i>
           <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:.75rem"><?= htmlspecialchars($current_lesson['titulo']) ?></h2>
-          <?php if ($current_lesson['url_material']): ?>
-          <a href="<?= SITE_URL ?>/<?= htmlspecialchars($current_lesson['url_material']) ?>" target="_blank" class="btn btn-primary btn-lg">
-            <i class="fas fa-eye"></i> Abrir Recurso
-          </a>
-          <?php endif; ?>
+          <p style="color:var(--text-muted);margin-bottom:1.5rem">Documento de texto · <?= strtoupper($file_ext) ?></p>
+          <div style="display:flex;gap:1rem;justify-content:center">
+            <a href="<?= $file_url ?>" target="_blank" class="btn btn-primary btn-lg">
+              <i class="fas fa-eye"></i> Abrir Recurso
+            </a>
+            <a href="<?= $file_url ?>" download class="btn btn-outline btn-lg">
+              <i class="fas fa-download"></i> Descargar
+            </a>
+          </div>
+        </div>
+        <?php endif; ?>
+        
+        <?php elseif ($current_lesson['tipo_material'] === 'lectura' && $current_lesson['contenido']): ?>
+        <!-- Text Reading Content -->
+        <div style="width:100%;max-width:800px;margin:0 auto;padding:3rem 2rem;background:var(--bg-card)">
+          <div class="reading-content" style="font-size:1.05rem;line-height:1.8;color:var(--text-primary)">
+            <?= nl2br(htmlspecialchars($current_lesson['contenido'])) ?>
+          </div>
         </div>
         <?php endif; ?>
       <?php else: ?>
@@ -347,9 +478,46 @@ include_once __DIR__ . '/../includes/header.php';
 
     <!-- Description -->
     <?php if ($current_lesson && $current_lesson['descripcion']): ?>
-    <div style="padding:1.75rem 2rem">
+    <div style="padding:1.75rem 2rem;border-bottom:1px solid var(--border)">
       <h3 style="font-size:1rem;font-weight:600;margin-bottom:.75rem">Acerca de esta lección</h3>
       <p style="color:var(--text-secondary);line-height:1.7"><?= nl2br(htmlspecialchars($current_lesson['descripcion'])) ?></p>
+    </div>
+    <?php endif; ?>
+
+    <!-- Navigation Buttons -->
+    <?php if ($prev_lesson || $next_lesson): ?>
+    <div style="padding:1.5rem 2rem;border-top:1px solid var(--border);background:var(--bg-surface)">
+      <div style="display:flex;justify-content:space-between;gap:1rem">
+        <?php if ($prev_lesson): ?>
+        <a href="?id=<?= $id_curso ?>&leccion=<?= $prev_lesson['id_material'] ?>" 
+           class="btn btn-outline" 
+           style="flex:1;max-width:250px;text-align:left;display:flex;align-items:center;gap:.75rem">
+          <i class="fas fa-chevron-left"></i>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:.15rem">Anterior</div>
+            <div style="font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              <?= htmlspecialchars($prev_lesson['titulo']) ?>
+            </div>
+          </div>
+        </a>
+        <?php else: ?>
+        <div style="flex:1;max-width:250px"></div>
+        <?php endif; ?>
+
+        <?php if ($next_lesson): ?>
+        <a href="?id=<?= $id_curso ?>&leccion=<?= $next_lesson['id_material'] ?>" 
+           class="btn btn-primary" 
+           style="flex:1;max-width:250px;text-align:right;display:flex;align-items:center;gap:.75rem">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.7rem;opacity:.85;margin-bottom:.15rem">Siguiente</div>
+            <div style="font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              <?= htmlspecialchars($next_lesson['titulo']) ?>
+            </div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </a>
+        <?php endif; ?>
+      </div>
     </div>
     <?php endif; ?>
   </div>
@@ -493,6 +661,11 @@ document.querySelectorAll('.mark-complete-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     const lessonId = this.dataset.lesson;
     const inscripcionId = this.dataset.inscripcion;
+    const button = this;
+    
+    // Disable button
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Marcando...';
     
     fetch('<?= SITE_URL ?>/backend/progreso.php', {
       method: 'POST',
@@ -502,10 +675,56 @@ document.querySelectorAll('.mark-complete-btn').forEach(btn => {
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        location.reload();
+        // Update UI
+        button.innerHTML = '<i class="fas fa-check"></i> Completada';
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-success');
+        button.style.pointerEvents = 'none';
+        button.style.opacity = '.85';
+        
+        // Update progress bar
+        if (data.progreso !== undefined) {
+          document.getElementById('courseProgress').style.width = data.progreso + '%';
+          document.getElementById('progressText').textContent = Math.round(data.progreso) + '%';
+          document.querySelectorAll('.progress-bar').forEach(bar => {
+            if (bar.id !== 'courseProgress') bar.style.width = data.progreso + '%';
+          });
+        }
+        
+        // Update lesson count
+        document.querySelectorAll('[style*="lecciones"]').forEach(el => {
+          if (el.textContent.includes('/')) {
+            el.textContent = `${data.completadas}/${data.total} lecciones`;
+          }
+        });
+        
+        // Mark lesson in sidebar
+        document.querySelectorAll(`.lesson-item[data-lesson="${lessonId}"]`).forEach(item => {
+          item.classList.add('completed');
+          const icon = item.querySelector('i');
+          if (icon) {
+            icon.className = 'fas fa-check-circle';
+            icon.style.color = 'var(--success)';
+          }
+        });
+        
+        // Show success message
+        const msg = document.createElement('div');
+        msg.style.cssText = 'position:fixed;top:80px;right:20px;background:var(--success);color:#fff;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:9999;animation:slideIn 0.3s ease';
+        msg.innerHTML = '<i class="fas fa-check-circle"></i> Lección marcada como completada';
+        document.body.appendChild(msg);
+        setTimeout(() => msg.remove(), 3000);
+        
       } else {
         alert('Error al marcar como completada.');
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-check"></i> Marcar como completada';
       }
+    })
+    .catch(err => {
+      alert('Error de conexión');
+      button.disabled = false;
+      button.innerHTML = '<i class="fas fa-check"></i> Marcar como completada';
     });
   });
 });

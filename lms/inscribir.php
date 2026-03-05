@@ -6,7 +6,7 @@ require_once __DIR__ . '/../backend/classes/Curso.php';
 requiereRol(['USUARIO']);
 
 $id_curso  = intval($_GET['id'] ?? 0);
-$id_alumno = $_SESSION['usuario_rol_id'] ?? 0;
+$id_alumno = $_SESSION['info_adicional']['id_alumno'] ?? 0;
 
 $obj   = new Curso();
 $curso = $obj->porId($id_curso);

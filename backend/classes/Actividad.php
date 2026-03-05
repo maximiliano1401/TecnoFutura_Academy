@@ -442,4 +442,42 @@ class Actividad {
         $stmt->execute([':al' => $id_alumno]);
         return $stmt->fetchAll();
     }
+
+    /**
+     * Obtener próximas evaluaciones de un alumno
+     */
+    public function proximasEvaluaciones(int $id_alumno, int $limit = 5): array {
+        $stmt = $this->db->prepare("SELECT 
+            a.id_actividad, a.titulo, a.descripcion, 
+            a.duracion_minutos, a.intentos_permitidos, a.activo,
+            a.puntaje_total, a.puntaje_minimo_aprobatorio,
+            mc.titulo as material_titulo, mc.orden,
+            c.nombre_curso, c.id_curso,
+            i.id_inscripcion, i.progreso,
+            COUNT(DISTINCT p.id_pregunta) as total_preguntas,
+            COALESCE(MAX(ia.numero_intento), 0) as intentos_realizados
+            FROM actividades a
+            INNER JOIN materiales_curso mc ON a.id_material = mc.id_material
+            INNER JOIN cursos c ON mc.id_curso = c.id_curso
+            INNER JOIN inscripciones i ON c.id_curso = i.id_curso
+            LEFT JOIN preguntas p ON a.id_actividad = p.id_actividad
+            LEFT JOIN intentos_actividad ia ON a.id_actividad = ia.id_actividad 
+                AND ia.id_inscripcion = i.id_inscripcion
+            WHERE i.id_alumno = :al 
+                AND i.estado IN ('Activo', 'En curso', 'Inscrito')
+                AND a.activo = 1
+            GROUP BY a.id_actividad, a.titulo, a.descripcion, 
+                a.duracion_minutos, a.intentos_permitidos, a.activo,
+                a.puntaje_total, a.puntaje_minimo_aprobatorio,
+                mc.titulo, mc.orden, c.nombre_curso, c.id_curso,
+                i.id_inscripcion, i.progreso
+            HAVING a.intentos_permitidos = 0 OR intentos_realizados < a.intentos_permitidos
+            ORDER BY mc.orden ASC, a.id_actividad ASC
+            LIMIT :limit");
+        
+        $stmt->bindValue(':al', $id_alumno, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

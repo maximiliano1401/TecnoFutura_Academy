@@ -18,7 +18,8 @@ $is_free     = $curso['precio'] == 0;
 
 $insc = null;
 if ($is_logged && $_SESSION['usuario_rol'] === 'USUARIO') {
-    $insc = $obj->inscripcionAlumno($id, $_SESSION['usuario_rol_id'] ?? 0);
+    $id_alumno = $_SESSION['info_adicional']['id_alumno'] ?? 0;
+    $insc = $obj->inscripcionAlumno($id, $id_alumno);
 }
 
 $precio_original = $is_free ? null : $curso['precio'] * 1.4;
