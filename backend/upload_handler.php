@@ -54,8 +54,9 @@ class UploadHandler {
             return ['success' => false, 'message' => "El archivo excede el tamaño máximo de {$max_mb}MB"];
         }
 
-        // Preparar directorio destino
-        $curso_dir = $this->upload_dir . "cursos/{$id_curso}/materiales/";
+        // Preparar directorio destino: uploads/cursos/{tipo}/{id_curso}/
+        $tipo_folder = $tipo === 'documento' ? 'documentos' : ($tipo === 'video' ? 'videos' : 'imagenes');
+        $curso_dir = $this->upload_dir . "cursos/{$tipo_folder}/{$id_curso}/";
         if (!$this->ensureDirectoryExists($curso_dir)) {
             return ['success' => false, 'message' => 'Error al crear directorio de destino'];
         }
@@ -67,7 +68,7 @@ class UploadHandler {
         // Mover archivo
         if (move_uploaded_file($file['tmp_name'], $destination)) {
             // Ruta relativa para guardar en BD
-            $relative_path = "uploads/cursos/{$id_curso}/materiales/{$filename}";
+            $relative_path = "uploads/cursos/{$tipo_folder}/{$id_curso}/{$filename}";
             
             return [
                 'success' => true,
