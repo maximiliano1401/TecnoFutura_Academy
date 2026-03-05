@@ -1,12 +1,22 @@
 <?php
+// Evitar cualquier output antes del JSON
+ob_start();
 session_start();
-require_once __DIR__ . '/../config.php';
+
+// Limpiar cualquier output previo
+ob_clean();
+
+require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../classes/Database.php';
 
+// Asegurar que no hay output anterior
+ob_end_clean();
+
 header('Content-Type: application/json');
+header('Cache-Control: no-cache, must-revalidate');
 
 // Verificar sesión
-if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo_usuario'] !== 'docente') {
+if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] !== 'PROFESOR') {
     echo json_encode(['error' => 'No autorizado']);
     exit;
 }
@@ -17,7 +27,12 @@ if (!isset($_GET['id_actividad'])) {
 }
 
 $id_actividad = intval($_GET['id_actividad']);
-$id_docente = $_SESSION['id_usuario'];
+$id_docente = $_SESSION['info_adicional']['id_docente'] ?? 0;
+
+if (!$id_docente) {
+    echo json_encode(['error' => 'ID de docente no encontrado en sesión']);
+    exit;
+}
 
 try {
     $db = Database::getInstance()->getConnection();

@@ -310,7 +310,7 @@ include_once __DIR__ . '/../includes/header.php';
           <select name="id_curso" class="form-control" required>
             <option value="">Selecciona un curso...</option>
             <?php foreach ($cursos as $curso): ?>
-            <option value="<?= $curso['id_curso'] ?>"><?= htmlspecialchars($curso['nombre']) ?></option>
+            <option value="<?= $curso['id_curso'] ?>"><?= htmlspecialchars($curso['nombre_curso']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>

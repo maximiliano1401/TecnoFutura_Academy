@@ -11,7 +11,8 @@ class UploadHandler {
     private $errors = [];
 
     public function __construct() {
-        $this->upload_dir = dirname(__DIR__, 2) . '/uploads/';
+        // Ruta absoluta a la carpeta uploads del proyecto
+        $this->upload_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
         
         // Tipos permitidos por categoría
         $this->allowed_types = [
@@ -56,17 +57,27 @@ class UploadHandler {
 
         // Preparar directorio destino: uploads/cursos/{tipo}/{id_curso}/
         $tipo_folder = $tipo === 'documento' ? 'documentos' : ($tipo === 'video' ? 'videos' : 'imagenes');
-        $curso_dir = $this->upload_dir . "cursos/{$tipo_folder}/{$id_curso}/";
+        $curso_dir = $this->upload_dir . 'cursos' . DIRECTORY_SEPARATOR . $tipo_folder . DIRECTORY_SEPARATOR . $id_curso . DIRECTORY_SEPARATOR;
         if (!$this->ensureDirectoryExists($curso_dir)) {
-            return ['success' => false, 'message' => 'Error al crear directorio de destino'];
+            return ['success' => false, 'message' => 'Error al crear directorio de destino: ' . $curso_dir];
         }
 
         // Generar nombre único
         $filename = $this->generateUniqueFilename($file['name'], $curso_dir);
         $destination = $curso_dir . $filename;
 
+        // Verificar que el archivo temporal existe
+        if (!file_exists($file['tmp_name'])) {
+            return ['success' => false, 'message' => 'El archivo temporal no existe'];
+        }
+
         // Mover archivo
         if (move_uploaded_file($file['tmp_name'], $destination)) {
+            // Verificar que se creó correctamente
+            if (!file_exists($destination)) {
+                return ['success' => false, 'message' => 'El archivo no se guardó correctamente'];
+            }
+            
             // Ruta relativa para guardar en BD
             $relative_path = "uploads/cursos/{$tipo_folder}/{$id_curso}/{$filename}";
             
@@ -80,7 +91,7 @@ class UploadHandler {
             ];
         }
 
-        return ['success' => false, 'message' => 'Error al mover el archivo'];
+        return ['success' => false, 'message' => 'Error al mover el archivo. Origen: ' . $file['tmp_name'] . ', Destino: ' . $destination];
     }
 
     /**
@@ -104,7 +115,7 @@ class UploadHandler {
             return ['success' => false, 'message' => 'La imagen excede el tamaño máximo de 5MB'];
         }
 
-        $curso_dir = $this->upload_dir . "cursos/imagenes/";
+        $curso_dir = $this->upload_dir . 'cursos' . DIRECTORY_SEPARATOR . 'imagenes' . DIRECTORY_SEPARATOR;
         if (!$this->ensureDirectoryExists($curso_dir)) {
             return ['success' => false, 'message' => 'Error al crear directorio'];
         }
